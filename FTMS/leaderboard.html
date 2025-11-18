@@ -290,8 +290,10 @@
             margin-bottom: 15px;
         }
     </style>
-</head>
-<body>
+    </head>
+    <body>
+    <!-- Load configuration file if available -->
+    <script src="config.js" onerror="console.log('config.js not found, using localStorage instead')"></script>
     <div class="container">
         <div class="header">
             <h1>🏆 Leaderboard</h1>
@@ -327,13 +329,25 @@
     </div>
 
     <script>
+        // Helper function to get config value (checks CONFIG first, then localStorage)
+        function getConfig(key) {
+            if (typeof CONFIG !== 'undefined' && CONFIG[key]) {
+                return CONFIG[key];
+            }
+            return localStorage.getItem(key) || '';
+        }
+
         let allSubmissions = [];
         let playersData = [];
         let teamsData = [];
 
-        // Load data from localStorage (same config as dashboard)
+        // Load data from config.js or localStorage (same config as dashboard)
+        // Wait for config.js to load first
         window.addEventListener('DOMContentLoaded', function() {
-            loadLeaderboardData();
+            // Small delay to ensure config.js is loaded
+            setTimeout(function() {
+                loadLeaderboardData();
+            }, 100);
         });
 
         async function loadLeaderboardData() {
@@ -346,12 +360,17 @@
             contentDiv.style.display = 'none';
 
             try {
-                // Get configuration from localStorage
-                const apiKey = localStorage.getItem('apiKey') || '';
-                const sheetId = localStorage.getItem('sheetId') || '';
-                const submissionSheet = localStorage.getItem('submissionSheet') || 'submission_dev';
-                const playersSheet = localStorage.getItem('playersSheet') || 'Players';
-                const teamSheet = localStorage.getItem('teamSheet') || 'Team';
+                // Get configuration from config.js first, then localStorage
+                const apiKey = getConfig('apiKey');
+                const sheetId = getConfig('sheetId');
+                const submissionSheet = getConfig('submissionSheet') || 'submission';
+                const playersSheet = getConfig('playersSheet') || 'Players';
+                const teamSheet = getConfig('teamSheet') || 'Team';
+
+                // Validate API key and Sheet ID
+                if (!apiKey || !sheetId) {
+                    throw new Error('API Key or Sheet ID is missing. Please check your config.js file.');
+                }
 
                 // Load all required data
                 const [submissions, players, teams] = await Promise.all([
@@ -381,6 +400,10 @@
         }
 
         async function loadSheetData(sheetId, sheetName, apiKey) {
+            if (!apiKey || !sheetId) {
+                throw new Error('API Key or Sheet ID is missing');
+            }
+
             const range = `${sheetName}!A1:Z1000`;
             const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${encodeURIComponent(range)}?key=${apiKey}`;
             
