@@ -345,6 +345,8 @@
     </style>
     </head>
     <body>
+    <!-- Load configuration file if available -->
+    <script src="config.js" onerror="console.log('config.js not found, using localStorage instead')"></script>
     <div class="container">
         <div class="header">
             <h1>🏆 FTMS Dashboard</h1>
@@ -421,6 +423,19 @@
     </div>
 
     <script>
+        // Helper function to get config value (checks CONFIG first, then localStorage)
+        function getConfig(key) {
+            if (typeof CONFIG !== 'undefined' && CONFIG[key]) {
+                return CONFIG[key];
+            }
+            return localStorage.getItem(key) || '';
+        }
+
+        // Helper function to set config value (saves to localStorage)
+        function setConfig(key, value) {
+            localStorage.setItem(key, value);
+        }
+
         let sheetsData = {
             Players: null,
             Team: null,
@@ -820,18 +835,19 @@
             localStorage.setItem('submissionSheet', document.getElementById('submissionSheet').value);
         }
 
-        // Load saved configuration from localStorage and auto-load sheets
+        // Load saved configuration from config.js or localStorage and auto-load sheets
         window.addEventListener('DOMContentLoaded', function() {
+            // Get config from config.js first, then localStorage
             const savedConfig = {
-                apiKey: localStorage.getItem('apiKey'),
-                sheetId: localStorage.getItem('sheetId'),
-                playersSheet: localStorage.getItem('playersSheet'),
-                teamSheet: localStorage.getItem('teamSheet'),
-                boatSheet: localStorage.getItem('boatSheet'),
-                submissionSheet: localStorage.getItem('submissionSheet')
+                apiKey: getConfig('apiKey'),
+                sheetId: getConfig('sheetId'),
+                playersSheet: getConfig('playersSheet') || 'Players',
+                teamSheet: getConfig('teamSheet') || 'Team',
+                boatSheet: getConfig('boatSheet') || 'Boat',
+                submissionSheet: getConfig('submissionSheet') || 'submission'
             };
 
-            // Populate input fields with saved values (or keep default values if no saved values)
+            // Populate input fields with values from config.js or localStorage
             if (savedConfig.apiKey) document.getElementById('apiKey').value = savedConfig.apiKey;
             if (savedConfig.sheetId) document.getElementById('sheetId').value = savedConfig.sheetId;
             if (savedConfig.playersSheet) document.getElementById('playersSheet').value = savedConfig.playersSheet;
