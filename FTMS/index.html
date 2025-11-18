@@ -1,0 +1,863 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FTMS Dashboard - Google Sheets</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            padding: 30px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+
+        .subtitle {
+            color: #666;
+            font-size: 1.1em;
+        }
+
+        .config-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+        }
+
+        .config-toggle {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            margin-bottom: 15px;
+            transition: transform 0.2s;
+        }
+
+        .config-toggle:hover {
+            transform: translateY(-2px);
+        }
+
+        .config-content {
+            display: none;
+        }
+
+        .config-content.active {
+            display: block;
+        }
+
+        .sheet-config {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            border-left: 4px solid #667eea;
+        }
+
+        .sheet-config h3 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 1.2em;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #333;
+            font-weight: 600;
+            font-size: 0.9em;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            width: 100%;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .info-box {
+            background: #e3f2fd;
+            border-left: 4px solid #2196f3;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .error {
+            background: #ffebee;
+            border-left: 4px solid #f44336;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            color: #c62828;
+        }
+
+        .dashboard-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .sheets-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(600px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .sheet-card {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .sheet-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #ddd;
+        }
+
+        .sheet-title {
+            font-size: 1.5em;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .sheet-stats {
+            display: flex;
+            gap: 10px;
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        .sheet-stat {
+            background: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 0.9em;
+        }
+
+        td {
+            padding: 10px 12px;
+            border-bottom: 1px solid #eee;
+            font-size: 0.9em;
+        }
+
+        tr:hover {
+            background: #f5f5f5;
+        }
+
+        .link-cell {
+            color: #667eea;
+            text-decoration: none;
+            word-break: break-all;
+        }
+
+        .link-cell:hover {
+            text-decoration: underline;
+        }
+
+        .image-cell {
+            text-align: center;
+            padding: 10px;
+        }
+
+        .image-cell img {
+            max-width: 200px;
+            max-height: 200px;
+            border-radius: 5px;
+            cursor: pointer;
+            object-fit: contain;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .image-cell img:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+
+        .image-cell iframe {
+            max-width: 200px;
+            max-height: 200px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .image-cell iframe:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+        }
+
+        .refresh-btn {
+            background: #4caf50;
+            margin-top: 10px;
+        }
+
+        .refresh-btn:hover {
+            background: #45a049;
+        }
+
+        .nav-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .nav-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: transform 0.2s;
+            display: inline-block;
+        }
+
+        .nav-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .nav-btn.active {
+            background: linear-gradient(135deg, #4caf50 0%, #45a049 100%);
+        }
+    </style>
+    </head>
+    <body>
+    <div class="container">
+        <div class="header">
+            <h1>🏆 FTMS Dashboard</h1>
+            <p class="subtitle">Tournament Management System - Google Sheets Integration</p>
+            <div class="nav-buttons">
+                <a href="index.html" class="nav-btn active">📊 Dashboard</a>
+                <a href="leaderboard.html" class="nav-btn">🐟 Submissions</a>
+                <a href="leaderboard-individual.html" class="nav-btn">👤 Individual</a>
+                <a href="leaderboard-team.html" class="nav-btn">🏅 Team</a>
+            </div>
+            <button class="btn refresh-btn" id="refreshBtn" onclick="loadAllSheets()" style="display: none; max-width: 200px; margin: 20px auto 0;">
+                🔄 Refresh Data
+            </button>
+        </div>
+
+        <div class="config-section">
+            <button class="config-toggle" onclick="toggleConfig()">⚙️ Configure Google Sheets</button>
+            <div class="config-content" id="configContent">
+                <div class="info-box">
+                    <strong>Google Sheets API Configuration:</strong><br>
+                    The dashboard uses Google Sheets API to fetch data directly. Make sure your Google Sheet is shared with "Anyone with the link" or the API key has proper permissions.<br><br>
+                    <strong>Note for Images:</strong> For Google Drive images to display directly, the files must be shared with "Anyone with the link can view" permission. Right-click the file in Google Drive → Share → Change to "Anyone with the link".
+                </div>
+
+                <div class="sheet-config">
+                    <h3>🔑 API Configuration</h3>
+                    <div class="form-group">
+                        <label for="apiKey">Google Sheets API Key:</label>
+                        <input type="text" id="apiKey" value="AIzaSyCnj-koxjrP0MmXb0-nD29lXiwdZT15sAo" placeholder="Your Google API Key">
+                    </div>
+                    <div class="form-group">
+                        <label for="sheetId">Google Sheet ID:</label>
+                        <input type="text" id="sheetId" value="1yV1qk479m7WLaVLjKpogNZ_VfuJ9UvEAr3s-8FEH1lY" placeholder="Sheet ID from the URL">
+                    </div>
+                </div>
+
+                <div class="sheet-config">
+                    <h3>📋 Sheet Names</h3>
+                    <div class="form-group">
+                        <label for="playersSheet">Players Sheet Name:</label>
+                        <input type="text" id="playersSheet" value="Players" placeholder="Players">
+                    </div>
+                    <div class="form-group">
+                        <label for="teamSheet">Team Sheet Name:</label>
+                        <input type="text" id="teamSheet" value="Team" placeholder="Team">
+                    </div>
+                    <div class="form-group">
+                        <label for="boatSheet">Boat Sheet Name:</label>
+                        <input type="text" id="boatSheet" value="Boat" placeholder="Boat">
+                    </div>
+                    <div class="form-group">
+                        <label for="submissionSheet">Submission Sheet Name:</label>
+                        <input type="text" id="submissionSheet" value="submission_dev" placeholder="submission_dev">
+                    </div>
+                </div>
+
+                <button class="btn" onclick="loadAllSheets()">📊 Save & Load All Sheets</button>
+                <div style="text-align: center; margin-top: 10px; color: #666; font-size: 0.9em;">
+                    Settings are saved automatically and will load on next visit
+                </div>
+            </div>
+        </div>
+
+        <div id="loading" class="loading" style="display: none;">
+            Loading all sheets...
+        </div>
+
+        <div id="error" class="error" style="display: none;"></div>
+
+        <div id="dashboard" style="display: none;">
+            <div class="dashboard-stats" id="dashboardStats"></div>
+            <div class="sheets-container" id="sheetsContainer"></div>
+        </div>
+    </div>
+
+    <script>
+        let sheetsData = {
+            Players: null,
+            Team: null,
+            Boat: null,
+            submission_dev: null
+        };
+
+        function toggleConfig() {
+            const content = document.getElementById('configContent');
+            content.classList.toggle('active');
+        }
+
+        async function loadAllSheets() {
+            const loadingDiv = document.getElementById('loading');
+            const errorDiv = document.getElementById('error');
+            const dashboard = document.getElementById('dashboard');
+
+            errorDiv.style.display = 'none';
+            dashboard.style.display = 'none';
+            loadingDiv.style.display = 'block';
+
+            const apiKey = document.getElementById('apiKey').value.trim();
+            const sheetId = document.getElementById('sheetId').value.trim();
+
+            if (!apiKey || !sheetId) {
+                loadingDiv.style.display = 'none';
+                errorDiv.style.display = 'block';
+                errorDiv.textContent = 'Please provide both API Key and Sheet ID';
+                return;
+            }
+
+            const sheetConfigs = {
+                Players: document.getElementById('playersSheet').value.trim(),
+                Team: document.getElementById('teamSheet').value.trim(),
+                Boat: document.getElementById('boatSheet').value.trim(),
+                submission_dev: document.getElementById('submissionSheet').value.trim()
+            };
+
+            const errors = [];
+            const loadedSheets = {};
+
+            // Load all sheets in parallel
+            const loadPromises = Object.keys(sheetConfigs).map(async (sheetName) => {
+                const sheetTabName = sheetConfigs[sheetName];
+                if (!sheetTabName) {
+                    errors.push(`${sheetName}: No sheet name provided`);
+                    return;
+                }
+
+                try {
+                    const data = await loadFromAPI(sheetId, sheetTabName, apiKey);
+                    if (data && data.length > 0) {
+                        loadedSheets[sheetName] = data;
+                        sheetsData[sheetName] = data;
+                    } else {
+                        errors.push(`${sheetName}: No data found`);
+                    }
+                } catch (error) {
+                    errors.push(`${sheetName}: ${error.message}`);
+                }
+            });
+
+            await Promise.all(loadPromises);
+
+            loadingDiv.style.display = 'none';
+
+            if (errors.length > 0 && Object.keys(loadedSheets).length === 0) {
+                errorDiv.style.display = 'block';
+                errorDiv.innerHTML = '<strong>Errors:</strong><br>' + errors.join('<br>');
+                return;
+            }
+
+            if (errors.length > 0) {
+                errorDiv.style.display = 'block';
+                errorDiv.innerHTML = '<strong>Some sheets failed to load:</strong><br>' + errors.join('<br>');
+            }
+
+            if (Object.keys(loadedSheets).length > 0) {
+                displayDashboard(loadedSheets);
+                dashboard.style.display = 'block';
+                document.getElementById('refreshBtn').style.display = 'block';
+            }
+        }
+
+        async function loadFromAPI(sheetId, sheetName, apiKey) {
+            // Use the sheet name with a large range to get all data (up to 1000 rows and 26 columns)
+            // If you need more, you can adjust the range or use multiple calls
+            const range = `${sheetName}!A1:Z1000`;
+            const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${encodeURIComponent(range)}?key=${apiKey}`;
+            
+            const response = await fetch(url);
+            
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                const errorMsg = errorData.error?.message || `API Error: ${response.status} ${response.statusText}`;
+                throw new Error(errorMsg);
+            }
+
+            const data = await response.json();
+            
+            if (!data.values || data.values.length === 0) {
+                throw new Error('No data found in the specified range');
+            }
+
+            return data.values;
+        }
+
+        function displayDashboard(loadedSheets) {
+            const container = document.getElementById('sheetsContainer');
+            const statsDiv = document.getElementById('dashboardStats');
+            
+            container.innerHTML = '';
+            
+            // Calculate overall statistics
+            let totalRows = 0;
+            let totalSheets = Object.keys(loadedSheets).length;
+            
+            Object.values(loadedSheets).forEach(sheet => {
+                totalRows += sheet.length - 1; // Subtract header row
+            });
+
+            // Display overall stats
+            statsDiv.innerHTML = `
+                <div class="stat-card">
+                    <div class="stat-value">${totalSheets}</div>
+                    <div class="stat-label">Active Sheets</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${totalRows}</div>
+                    <div class="stat-label">Total Records</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${loadedSheets.Players ? loadedSheets.Players.length - 1 : 0}</div>
+                    <div class="stat-label">Players</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${loadedSheets.Team ? loadedSheets.Team.length - 1 : 0}</div>
+                    <div class="stat-label">Teams</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${loadedSheets.Boat ? loadedSheets.Boat.length - 1 : 0}</div>
+                    <div class="stat-label">Boats</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${loadedSheets.submission_dev ? loadedSheets.submission_dev.length - 1 : 0}</div>
+                    <div class="stat-label">Submissions</div>
+                </div>
+            `;
+
+            // Display each sheet
+            const sheetOrder = ['Players', 'Team', 'Boat', 'submission_dev'];
+            
+            sheetOrder.forEach(sheetName => {
+                if (loadedSheets[sheetName]) {
+                    const sheetCard = createSheetCard(sheetName, loadedSheets[sheetName]);
+                    container.appendChild(sheetCard);
+                }
+            });
+        }
+
+        function createSheetCard(sheetName, data) {
+            const card = document.createElement('div');
+            card.className = 'sheet-card';
+            
+            const headers = data[0];
+            const rows = data.slice(1);
+            
+            const header = document.createElement('div');
+            header.className = 'sheet-header';
+            const displayName = sheetName === 'submission_dev' ? 'Submission' : sheetName;
+            header.innerHTML = `
+                <div class="sheet-title">${getSheetIcon(sheetName)} ${displayName}</div>
+                <div class="sheet-stats">
+                    <span class="sheet-stat">${rows.length} rows</span>
+                    <span class="sheet-stat">${headers.length} columns</span>
+                </div>
+            `;
+            
+            const tableContainer = document.createElement('div');
+            tableContainer.style.overflowX = 'auto';
+            
+            const table = document.createElement('table');
+            const thead = document.createElement('thead');
+            const tbody = document.createElement('tbody');
+            
+            // Header row
+            const headerRow = document.createElement('tr');
+            headers.forEach(header => {
+                const th = document.createElement('th');
+                th.textContent = header || 'Column';
+                headerRow.appendChild(th);
+            });
+            thead.appendChild(headerRow);
+            
+            // Data rows
+            rows.forEach(row => {
+                const tr = document.createElement('tr');
+                headers.forEach((_, index) => {
+                    const td = document.createElement('td');
+                    const cellValue = row[index] || '';
+                    const columnName = (headers[index] || '').toLowerCase();
+                    
+                    // Check if it's a URL/link
+                    if (cellValue.startsWith('http://') || cellValue.startsWith('https://')) {
+                        // Check if it's an image URL (by URL pattern or column name)
+                        if (isImageUrl(cellValue, columnName)) {
+                            const imgContainer = document.createElement('div');
+                            imgContainer.className = 'image-cell';
+                            
+                            const originalUrl = cellValue;
+                            
+                            // For Google Drive links, use iframe preview which is more reliable
+                            if (originalUrl.includes('drive.google.com')) {
+                                const fileId = extractGoogleDriveFileId(originalUrl);
+                                if (fileId) {
+                                    
+                                    // Try to load as image first
+                                    const img = document.createElement('img');
+                                    const convertedUrl = `https://drive.google.com/uc?export=view&id=${fileId}`;
+                                    img.src = convertedUrl;
+                                    img.alt = 'Image';
+                                    img.loading = 'lazy';
+                                    
+                                    img.onload = function() {
+                                        // Image loaded successfully - make it clickable
+                                        img.style.cursor = 'pointer';
+                                        img.onclick = function() {
+                                            window.open(originalUrl, '_blank');
+                                        };
+                                    };
+                                    
+                                    img.onerror = function() {
+                                        // If image fails, use iframe preview
+                                        img.style.display = 'none';
+                                        const iframe = document.createElement('iframe');
+                                        iframe.src = `https://drive.google.com/file/d/${fileId}/preview`;
+                                        iframe.style.width = '200px';
+                                        iframe.style.height = '200px';
+                                        iframe.style.border = 'none';
+                                        iframe.style.borderRadius = '5px';
+                                        iframe.style.cursor = 'pointer';
+                                        iframe.style.overflow = 'hidden';
+                                        iframe.onclick = function() {
+                                            window.open(originalUrl, '_blank');
+                                        };
+                                        imgContainer.appendChild(iframe);
+                                    };
+                                    
+                                    imgContainer.appendChild(img);
+                                } else {
+                                    // Can't extract file ID, show as link
+                                    const link = document.createElement('a');
+                                    link.href = originalUrl;
+                                    link.target = '_blank';
+                                    link.className = 'link-cell';
+                                    link.textContent = '📷 View Image';
+                                    imgContainer.appendChild(link);
+                                }
+                            } else {
+                                // Not a Google Drive link - try regular image loading
+                                const img = document.createElement('img');
+                                img.src = convertToImageUrl(originalUrl);
+                                img.alt = 'Image';
+                                img.loading = 'lazy';
+                                
+                                img.onload = function() {
+                                    img.style.cursor = 'pointer';
+                                    img.onclick = function() {
+                                        window.open(originalUrl, '_blank');
+                                    };
+                                };
+                                
+                                img.onerror = function() {
+                                    img.style.display = 'none';
+                                    const link = document.createElement('a');
+                                    link.href = originalUrl;
+                                    link.target = '_blank';
+                                    link.className = 'link-cell';
+                                    link.textContent = '📷 View Image';
+                                    imgContainer.appendChild(link);
+                                };
+                                
+                                imgContainer.appendChild(img);
+                            }
+                            
+                            td.appendChild(imgContainer);
+                        } else {
+                            // Regular URL - show as link
+                            const link = document.createElement('a');
+                            link.href = cellValue;
+                            link.target = '_blank';
+                            link.className = 'link-cell';
+                            link.textContent = cellValue.length > 50 ? cellValue.substring(0, 50) + '...' : cellValue;
+                            td.appendChild(link);
+                        }
+                    } else {
+                        td.textContent = cellValue;
+                    }
+                    
+                    tr.appendChild(td);
+                });
+                tbody.appendChild(tr);
+            });
+            
+            table.appendChild(thead);
+            table.appendChild(tbody);
+            tableContainer.appendChild(table);
+            
+            card.appendChild(header);
+            card.appendChild(tableContainer);
+            
+            return card;
+        }
+
+        function getSheetIcon(sheetName) {
+            const icons = {
+                'Players': '👥',
+                'Team': '🏅',
+                'Boat': '🚤',
+                'submission_dev': '📝',
+                'submission': '📝'
+            };
+            return icons[sheetName] || '📊';
+        }
+
+        // Check if URL is an image URL
+        function isImageUrl(url, columnName = '') {
+            if (!url) return false;
+            
+            // Check column names that suggest images
+            const imageKeywords = ['picture', 'image', 'img', 'photo', 'pic', 'thumbnail', 'fish_length_picture', 'picture_with_fish'];
+            if (columnName && imageKeywords.some(keyword => columnName.includes(keyword))) {
+                return true;
+            }
+            
+            // Check for image file extensions
+            const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp', '.svg'];
+            const lowerUrl = url.toLowerCase();
+            
+            // Check if URL contains image extensions
+            if (imageExtensions.some(ext => lowerUrl.includes(ext))) {
+                return true;
+            }
+            
+            // Check for Google Drive links (common for images)
+            if (url.includes('drive.google.com') || url.includes('googleusercontent.com')) {
+                return true;
+            }
+            
+            // Check for common image hosting services
+            if (url.includes('imgur.com') || url.includes('flickr.com') || 
+                url.includes('photobucket.com') || url.includes('imageshack.us')) {
+                return true;
+            }
+            
+            return false;
+        }
+
+        // Extract Google Drive file ID from various URL formats
+        function extractGoogleDriveFileId(url) {
+            if (!url || !url.includes('drive.google.com')) return null;
+            
+            // Try multiple patterns to extract file ID
+            let match = url.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
+            if (match) return match[1];
+            
+            match = url.match(/\/d\/([a-zA-Z0-9_-]+)/);
+            if (match) return match[1];
+            
+            match = url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+            if (match) return match[1];
+            
+            return null;
+        }
+
+        // Convert Google Drive link to direct image URL
+        function convertToImageUrl(url) {
+            if (!url) return url;
+            
+            const fileId = extractGoogleDriveFileId(url);
+            if (fileId) {
+                // Try direct view format (works if file is shared publicly)
+                return `https://drive.google.com/uc?export=view&id=${fileId}`;
+            }
+            
+            // Already a direct image URL or other format
+            return url;
+        }
+
+        // Save configuration to localStorage
+        function saveConfig() {
+            localStorage.setItem('apiKey', document.getElementById('apiKey').value);
+            localStorage.setItem('sheetId', document.getElementById('sheetId').value);
+            localStorage.setItem('playersSheet', document.getElementById('playersSheet').value);
+            localStorage.setItem('teamSheet', document.getElementById('teamSheet').value);
+            localStorage.setItem('boatSheet', document.getElementById('boatSheet').value);
+            localStorage.setItem('submissionSheet', document.getElementById('submissionSheet').value);
+        }
+
+        // Load saved configuration from localStorage and auto-load sheets
+        window.addEventListener('DOMContentLoaded', function() {
+            const savedConfig = {
+                apiKey: localStorage.getItem('apiKey'),
+                sheetId: localStorage.getItem('sheetId'),
+                playersSheet: localStorage.getItem('playersSheet'),
+                teamSheet: localStorage.getItem('teamSheet'),
+                boatSheet: localStorage.getItem('boatSheet'),
+                submissionSheet: localStorage.getItem('submissionSheet')
+            };
+
+            // Populate input fields with saved values (or keep default values if no saved values)
+            if (savedConfig.apiKey) document.getElementById('apiKey').value = savedConfig.apiKey;
+            if (savedConfig.sheetId) document.getElementById('sheetId').value = savedConfig.sheetId;
+            if (savedConfig.playersSheet) document.getElementById('playersSheet').value = savedConfig.playersSheet;
+            if (savedConfig.teamSheet) document.getElementById('teamSheet').value = savedConfig.teamSheet;
+            if (savedConfig.boatSheet) document.getElementById('boatSheet').value = savedConfig.boatSheet;
+            if (savedConfig.submissionSheet) document.getElementById('submissionSheet').value = savedConfig.submissionSheet;
+
+            // Get current values (either from localStorage or default values in HTML)
+            const apiKey = document.getElementById('apiKey').value.trim();
+            const sheetId = document.getElementById('sheetId').value.trim();
+
+            // Auto-load sheets if API key and Sheet ID are available
+            if (apiKey && sheetId) {
+                // Hide config section by default if configuration is available
+                document.getElementById('configContent').classList.remove('active');
+                // Auto-load the sheets
+                loadAllSheets();
+            }
+        });
+
+        // Update loadAllSheets to save configuration
+        const originalLoadAllSheets = loadAllSheets;
+        loadAllSheets = function() {
+            saveConfig();
+            return originalLoadAllSheets();
+        };
+    </script>
+    </body>
+</html>
