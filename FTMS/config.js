@@ -7,7 +7,7 @@ const CONFIG = {
     sheetId: '1yV1qk479m7WLaVLjKpogNZ_VfuJ9UvEAr3s-8FEH1lY',
     submissionSheet: 'submission',
     playersSheet: 'Players',
-    teamSheet: 'Teams',
+    teamSheet: 'Team',
     boatSheet: 'Boat'
 };
 
