@@ -493,9 +493,26 @@
         }
 
         function calculateKingImctPoints(teamId) {
-            // Find the longest Sebarau across ALL submissions
+            // Get team's category (boat or kayak)
+            const teamInfo = teamsData[teamId] || {};
+            const teamCategory = (teamInfo.category || teamInfo.category_name || teamInfo.type || '').toString().toLowerCase().trim();
+            
+            // Helper function to get a submission's team category
+            function getSubmissionCategory(submission) {
+                const player = playersData[submission.player_tag] || {};
+                const playerTeamId = player.team_id || player.teamid;
+                if (!playerTeamId) return '';
+                const subTeamInfo = teamsData[playerTeamId] || {};
+                return (subTeamInfo.category || subTeamInfo.category_name || subTeamInfo.type || '').toString().toLowerCase().trim();
+            }
+            
+            // Find the longest Sebarau in the same category as the team
             const allSebarau = allSubmissions
-                .filter(s => s.fish_type && s.fish_type.toLowerCase() === 'sebarau')
+                .filter(s => {
+                    if (!s.fish_type || s.fish_type.toLowerCase() !== 'sebarau') return false;
+                    const subCategory = getSubmissionCategory(s);
+                    return subCategory === teamCategory;
+                })
                 .map(s => ({
                     submission: s,
                     length: parseFloat(s.fish_lenght || s.fish_length) || 0
@@ -505,9 +522,13 @@
             
             const longestSebarau = allSebarau.length > 0 ? allSebarau[0] : null;
             
-            // Find the longest Toman across ALL submissions
+            // Find the longest Toman in the same category as the team
             const allToman = allSubmissions
-                .filter(s => s.fish_type && s.fish_type.toLowerCase() === 'toman')
+                .filter(s => {
+                    if (!s.fish_type || s.fish_type.toLowerCase() !== 'toman') return false;
+                    const subCategory = getSubmissionCategory(s);
+                    return subCategory === teamCategory;
+                })
                 .map(s => ({
                     submission: s,
                     length: parseFloat(s.fish_lenght || s.fish_length) || 0
@@ -579,9 +600,26 @@
         }
 
         function calculateKingImctBreakdown(teamId) {
-            // Find the longest Sebarau across ALL submissions
+            // Get team's category (boat or kayak)
+            const teamInfo = teamsData[teamId] || {};
+            const teamCategory = (teamInfo.category || teamInfo.category_name || teamInfo.type || '').toString().toLowerCase().trim();
+            
+            // Helper function to get a submission's team category
+            function getSubmissionCategory(submission) {
+                const player = playersData[submission.player_tag] || {};
+                const playerTeamId = player.team_id || player.teamid;
+                if (!playerTeamId) return '';
+                const subTeamInfo = teamsData[playerTeamId] || {};
+                return (subTeamInfo.category || subTeamInfo.category_name || subTeamInfo.type || '').toString().toLowerCase().trim();
+            }
+            
+            // Find the longest Sebarau in the same category as the team
             const allSebarau = allSubmissions
-                .filter(s => s.fish_type && s.fish_type.toLowerCase() === 'sebarau')
+                .filter(s => {
+                    if (!s.fish_type || s.fish_type.toLowerCase() !== 'sebarau') return false;
+                    const subCategory = getSubmissionCategory(s);
+                    return subCategory === teamCategory;
+                })
                 .map(s => ({
                     submission: s,
                     length: parseFloat(s.fish_lenght || s.fish_length) || 0
@@ -591,9 +629,13 @@
             
             const longestSebarau = allSebarau.length > 0 ? allSebarau[0] : null;
             
-            // Find the longest Toman across ALL submissions
+            // Find the longest Toman in the same category as the team
             const allToman = allSubmissions
-                .filter(s => s.fish_type && s.fish_type.toLowerCase() === 'toman')
+                .filter(s => {
+                    if (!s.fish_type || s.fish_type.toLowerCase() !== 'toman') return false;
+                    const subCategory = getSubmissionCategory(s);
+                    return subCategory === teamCategory;
+                })
                 .map(s => ({
                     submission: s,
                     length: parseFloat(s.fish_lenght || s.fish_length) || 0
