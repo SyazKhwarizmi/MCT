@@ -237,6 +237,7 @@
             background: white;
             border-radius: 8px;
             overflow: hidden;
+            text-align: left;
         }
 
         th {
@@ -293,6 +294,7 @@
             overflow-y: auto;
             display: none;
             margin-top: 5px;
+            text-align: left;
         }
 
         .filter-dropdown.active {
@@ -301,6 +303,7 @@
 
         .filter-content {
             padding: 10px;
+            text-align: left;
         }
 
         .filter-search {
@@ -310,11 +313,13 @@
             border-radius: 5px;
             margin-bottom: 10px;
             font-size: 0.9em;
+            text-align: left;
         }
 
         .filter-options {
             max-height: 200px;
             overflow-y: auto;
+            text-align: left;
         }
 
         .filter-option {
@@ -322,6 +327,8 @@
             align-items: center;
             padding: 5px;
             cursor: pointer;
+            text-align: left;
+            justify-content: flex-start;
         }
 
         .filter-option:hover {
@@ -338,15 +345,26 @@
             flex: 1;
             font-size: 0.9em;
             color: #333;
+            text-align: left;
+        }
+
+        .select-all-option {
+            text-align: left !important;
+            justify-content: flex-start !important;
+        }
+
+        .select-all-option label {
+            text-align: left !important;
         }
 
         .filter-actions {
             display: flex;
-            justify-content: space-between;
+            justify-content: flex-start;
             gap: 10px;
             margin-top: 10px;
             padding-top: 10px;
             border-top: 1px solid #eee;
+            text-align: left;
         }
 
         .filter-btn {
@@ -383,6 +401,15 @@
             padding: 10px 12px;
             border-bottom: 1px solid #eee;
             font-size: 0.9em;
+            text-align: left !important;
+        }
+
+        tbody {
+            text-align: left;
+        }
+
+        tbody td {
+            text-align: left !important;
         }
 
         tr:hover {
@@ -882,8 +909,13 @@
             // Close dropdown
             const dropdown = document.getElementById(`filter-${columnIndex}`);
             dropdown.classList.remove('active');
-            const icon = dropdown.previousElementSibling;
-            if (icon) icon.classList.remove('active');
+            // The dropdown's previous sibling is the headerWrapper div, not the icon
+            // The icon is nested inside the headerWrapper, so we need to query for it
+            const headerWrapper = dropdown.previousElementSibling;
+            if (headerWrapper) {
+                const icon = headerWrapper.querySelector('.filter-icon');
+                if (icon) icon.classList.remove('active');
+            }
         }
 
         function clearFilter(columnIndex) {
@@ -900,6 +932,7 @@
                 row.forEach(cellValue => {
                     const td = document.createElement('td');
                     td.textContent = cellValue || '';
+                    td.style.textAlign = 'left';
                     tr.appendChild(td);
                 });
                 tbody.appendChild(tr);

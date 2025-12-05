@@ -453,6 +453,12 @@
                     <option value="all">All Categories</option>
                 </select>
             </div>
+            <div class="filter-group">
+                <label for="playerTypeFilter">Filter by Player Type:</label>
+                <select id="playerTypeFilter">
+                    <option value="all">All</option>
+                </select>
+            </div>
         </div>
 
         <div id="loading" class="loading">
@@ -537,6 +543,7 @@
                 // Populate filter dropdowns
                 populateFishTypeFilter();
                 populateCategoryFilter();
+                populatePlayerTypeFilter();
 
                 // Display leaderboard
                 displayLeaderboard();
@@ -735,6 +742,38 @@
             });
         }
 
+        function populatePlayerTypeFilter() {
+            const filter = document.getElementById('playerTypeFilter');
+            
+            // Get all unique player types from players data
+            const allPlayerTypes = [...new Set(
+                Object.values(playersData)
+                    .map(player => {
+                        const playerType = player.type || 
+                                         player.Type || 
+                                         player.player_type || 
+                                         '';
+                        return playerType.trim();
+                    })
+                    .filter(type => type && type !== '')
+            )].sort();
+            
+            // Clear existing options except "All"
+            filter.innerHTML = '<option value="all">All Player Types</option>';
+            
+            allPlayerTypes.forEach(type => {
+                const option = document.createElement('option');
+                option.value = type;
+                option.textContent = type;
+                filter.appendChild(option);
+            });
+
+            // Add event listener
+            filter.addEventListener('change', function() {
+                displayLeaderboard();
+            });
+        }
+
         function displayLeaderboard() {
             const container = document.getElementById('leaderboardContainer');
             const statsDiv = document.getElementById('statsSummary');
@@ -742,8 +781,10 @@
             // Get filter values
             const fishTypeFilter = document.getElementById('fishTypeFilter');
             const categoryFilter = document.getElementById('categoryFilter');
+            const playerTypeFilter = document.getElementById('playerTypeFilter');
             const selectedFishType = fishTypeFilter ? fishTypeFilter.value : 'all';
             const selectedCategory = categoryFilter ? categoryFilter.value : 'all';
+            const selectedPlayerType = playerTypeFilter ? playerTypeFilter.value : 'all';
             
             // Filter submissions by fish type
             let filtered = allSubmissions;
@@ -759,6 +800,15 @@
                     const team = teamsData[playerTeamId] || {};
                     const teamCategory = (team.category || team.category_name || team.type || '').toString().trim();
                     return teamCategory === selectedCategory;
+                });
+            }
+            
+            // Filter by player type
+            if (selectedPlayerType !== 'all') {
+                filtered = filtered.filter(submission => {
+                    const player = playersData[submission.player_tag] || {};
+                    const playerType = (player.type || player.Type || player.player_type || '').toString().trim();
+                    return playerType === selectedPlayerType;
                 });
             }
 

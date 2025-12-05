@@ -351,6 +351,9 @@
                     <option value="best_of_kayaker">Best of Kayaker</option>
                     <option value="best_of_international_angler">Best Of International Angler</option>
                     <option value="best_of_sponsorship_team">Best of Sponsorship Team</option>
+                    <option value="best_of_angler_boater">Best of Angler Boater</option>
+                    <option value="best_of_international_guide">Best of International Guide</option>
+                    <option value="best_of_local_tekong">Best of Local Guide</option>
                 </select>
             </div>
         </div>
@@ -379,6 +382,7 @@
         let allSubmissions = [];
         let playersData = [];
         let teamsData = [];
+        let boatsData = [];
 
         // Load data from config.js or localStorage (same config as dashboard)
         // Wait for config.js to load first
@@ -405,6 +409,7 @@
                 const submissionSheet = getConfig('submissionSheet') || 'submission';
                 const playersSheet = getConfig('playersSheet') || 'Players';
                 const teamSheet = getConfig('teamSheet') || 'Team';
+                const boatSheet = getConfig('boatSheet') || 'Boat';
 
                 // Validate API key and Sheet ID
                 if (!apiKey || !sheetId) {
@@ -412,15 +417,17 @@
                 }
 
                 // Load all required data
-                const [submissions, players, teams] = await Promise.all([
+                const [submissions, players, teams, boats] = await Promise.all([
                     loadSheetData(sheetId, submissionSheet, apiKey),
                     loadSheetData(sheetId, playersSheet, apiKey),
-                    loadSheetData(sheetId, teamSheet, apiKey)
+                    loadSheetData(sheetId, teamSheet, apiKey),
+                    loadSheetData(sheetId, boatSheet, apiKey)
                 ]);
 
                 allSubmissions = processSubmissions(submissions);
                 playersData = processPlayers(players);
                 teamsData = processTeams(teams);
+                boatsData = processBoats(boats);
 
                 // Populate filter dropdowns
                 populateFilters();
@@ -517,6 +524,27 @@
                 }
             });
             return teams;
+        }
+
+        function processBoats(data) {
+            if (!data || data.length < 2) return {};
+            
+            const headers = data[0].map(h => h.toLowerCase().replace(/\s+/g, '_'));
+            const rows = data.slice(1);
+            
+            const boats = {};
+            rows.forEach(row => {
+                const entry = {};
+                headers.forEach((header, index) => {
+                    entry[header] = row[index] || '';
+                });
+                // Try multiple possible ID fields
+                const boatId = entry.boatid || entry.boat_id || entry.id || entry.boat_id_number || '';
+                if (boatId) {
+                    boats[boatId] = entry;
+                }
+            });
+            return boats;
         }
 
         function populateFilters() {
@@ -621,6 +649,29 @@
                 
                 // Sort by number of submissions (descending) for Best Of International Angler
                 playerRankings.sort((a, b) => b.totalSubmissions - a.totalSubmissions);
+            } else if (selectedCategory === 'best_of_angler_boater') {
+                // Filter to only show local type players with boating category
+                playerRankings = playerRankings.filter(player => {
+                    const playerInfo = playersData[player.playerTag] || {};
+                    const teamInfo = teamsData[player.teamId] || {};
+                    
+                    // Check for player type = "Local" (case-insensitive, handle different variations)
+                    const playerType = (playerInfo.type || playerInfo.Type || playerInfo.player_type || '').toString().toLowerCase().trim();
+                    
+                    // Check for team category = "Boating" or "Boat" or "Boater" (case-insensitive)
+                    const teamCategory = (teamInfo.category || teamInfo.category_name || teamInfo.type || '').toString().toLowerCase().trim();
+                    
+                    return playerType === 'local' && (teamCategory === 'boating' || teamCategory === 'boat' || teamCategory === 'boater');
+                });
+                
+                // Sort by number of submissions (descending) for Best of Angler Boater
+                playerRankings.sort((a, b) => b.totalSubmissions - a.totalSubmissions);
+            } else if (selectedCategory === 'best_of_international_guide') {
+                // For international guide, we need to show boats grouped by boat ID
+                // This will be handled separately in the display section
+            } else if (selectedCategory === 'best_of_local_tekong') {
+                // For local tekong, we need to show boats grouped by boat ID
+                // This will be handled separately in the display section
             } else if (selectedCategory === 'best_of_sponsorship_team') {
                 // For sponsorship teams, we need to show teams, not individual players
                 // This will be handled separately in the display section
@@ -631,6 +682,178 @@
 
             // Clear container
             container.innerHTML = '';
+
+            // Handle Best of International Guide separately (show boats grouped by boat ID)
+            if (selectedCategory === 'best_of_international_guide') {
+                // First filter to only international players
+                const internationalPlayers = playerRankings.filter(player => {
+                    const playerInfo = playersData[player.playerTag] || {};
+                    const playerType = (playerInfo.type || playerInfo.Type || playerInfo.player_type || '').toString().toLowerCase().trim();
+                    return playerType === 'international';
+                });
+
+                // Group international players by boat ID
+                const boatGroups = {};
+                
+                internationalPlayers.forEach(player => {
+                    const playerInfo = playersData[player.playerTag] || {};
+                    const teamInfo = teamsData[player.teamId] || {};
+                    
+                    // Get boat ID from player or team
+                    const boatId = (playerInfo.boat_id || playerInfo.boatid || teamInfo.boat_id || teamInfo.boatid || '').toString().trim();
+                    
+                    if (boatId) {
+                        if (!boatGroups[boatId]) {
+                            const boatInfo = boatsData[boatId] || {};
+                            // Get tekong from boat table
+                            const tekong = (boatInfo.boat_tekong || boatInfo.tekong || boatInfo.boat_tekong_name || boatInfo.tekong_name || boatInfo.captain || boatInfo.boat_captain || '').toString().trim();
+                            
+                            boatGroups[boatId] = {
+                                boatId: boatId,
+                                tekong: tekong || 'N/A',
+                                totalSubmissions: 0,
+                                players: []
+                            };
+                        }
+                        boatGroups[boatId].totalSubmissions += player.totalSubmissions;
+                        boatGroups[boatId].players.push(player);
+                    }
+                });
+
+                // Convert to array and sort by total submissions
+                const boatRankings = Object.values(boatGroups).sort((a, b) => b.totalSubmissions - a.totalSubmissions);
+
+                if (boatRankings.length === 0) {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-state-icon">🚤</div>
+                            <h3>No international guide data found</h3>
+                            <p>No data available for the selected filter.</p>
+                        </div>
+                    `;
+                    statsDiv.innerHTML = '';
+                    return;
+                }
+
+                // Display statistics for boats
+                const totalBoats = boatRankings.length;
+                const totalSubmissions = boatRankings.reduce((sum, b) => sum + b.totalSubmissions, 0);
+                const totalPlayers = boatRankings.reduce((sum, b) => sum + b.players.length, 0);
+                const avgSubmissions = totalBoats > 0 ? (totalSubmissions / totalBoats).toFixed(1) : 0;
+
+                statsDiv.innerHTML = `
+                    <div class="stat-card">
+                        <div class="stat-value">${totalBoats}</div>
+                        <div class="stat-label">Total Boats</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">${totalSubmissions}</div>
+                        <div class="stat-label">Total Submissions</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">${totalPlayers}</div>
+                        <div class="stat-label">Total Players</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">${avgSubmissions}</div>
+                        <div class="stat-label">Avg Submissions</div>
+                    </div>
+                `;
+
+                // Create boat cards
+                boatRankings.forEach((boat, index) => {
+                    const rank = index + 1;
+                    const card = createBoatCard(boat, rank);
+                    container.appendChild(card);
+                });
+                return;
+            }
+
+            // Handle Best of Local Tekong separately (show boats grouped by boat ID)
+            if (selectedCategory === 'best_of_local_tekong') {
+                // First filter to only local players
+                const localPlayers = playerRankings.filter(player => {
+                    const playerInfo = playersData[player.playerTag] || {};
+                    const playerType = (playerInfo.type || playerInfo.Type || playerInfo.player_type || '').toString().toLowerCase().trim();
+                    return playerType === 'local';
+                });
+
+                // Group local players by boat ID
+                const boatGroups = {};
+                
+                localPlayers.forEach(player => {
+                    const playerInfo = playersData[player.playerTag] || {};
+                    const teamInfo = teamsData[player.teamId] || {};
+                    
+                    // Get boat ID from player or team
+                    const boatId = (playerInfo.boat_id || playerInfo.boatid || teamInfo.boat_id || teamInfo.boatid || '').toString().trim();
+                    
+                    if (boatId) {
+                        if (!boatGroups[boatId]) {
+                            const boatInfo = boatsData[boatId] || {};
+                            // Get tekong from boat table
+                            const tekong = (boatInfo.boat_tekong || boatInfo.tekong || boatInfo.boat_tekong_name || boatInfo.tekong_name || boatInfo.captain || boatInfo.boat_captain || '').toString().trim();
+                            
+                            boatGroups[boatId] = {
+                                boatId: boatId,
+                                tekong: tekong || 'N/A',
+                                totalSubmissions: 0,
+                                players: []
+                            };
+                        }
+                        boatGroups[boatId].totalSubmissions += player.totalSubmissions;
+                        boatGroups[boatId].players.push(player);
+                    }
+                });
+
+                // Convert to array and sort by total submissions
+                const boatRankings = Object.values(boatGroups).sort((a, b) => b.totalSubmissions - a.totalSubmissions);
+
+                if (boatRankings.length === 0) {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-state-icon">🚤</div>
+                            <h3>No local tekong data found</h3>
+                            <p>No data available for the selected filter.</p>
+                        </div>
+                    `;
+                    statsDiv.innerHTML = '';
+                    return;
+                }
+
+                // Display statistics for boats
+                const totalBoats = boatRankings.length;
+                const totalSubmissions = boatRankings.reduce((sum, b) => sum + b.totalSubmissions, 0);
+                const totalPlayers = boatRankings.reduce((sum, b) => sum + b.players.length, 0);
+                const avgSubmissions = totalBoats > 0 ? (totalSubmissions / totalBoats).toFixed(1) : 0;
+
+                statsDiv.innerHTML = `
+                    <div class="stat-card">
+                        <div class="stat-value">${totalBoats}</div>
+                        <div class="stat-label">Total Boats</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">${totalSubmissions}</div>
+                        <div class="stat-label">Total Submissions</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">${totalPlayers}</div>
+                        <div class="stat-label">Total Players</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">${avgSubmissions}</div>
+                        <div class="stat-label">Avg Submissions</div>
+                    </div>
+                `;
+
+                // Create boat cards
+                boatRankings.forEach((boat, index) => {
+                    const rank = index + 1;
+                    const card = createBoatCard(boat, rank);
+                    container.appendChild(card);
+                });
+                return;
+            }
 
             // Handle Best of Sponsorship Team separately (show teams, not players)
             if (selectedCategory === 'best_of_sponsorship_team') {
@@ -816,6 +1039,31 @@
                             <div class="stat-item-label">Players</div>
                         </div>
                     </div>
+                </div>
+            `;
+            
+            return card;
+        }
+
+        function createBoatCard(boat, rank) {
+            const card = document.createElement('div');
+            card.className = 'leaderboard-card';
+            
+            const rankClass = rank === 1 ? 'gold' : rank === 2 ? 'silver' : rank === 3 ? 'bronze' : '';
+            
+            card.innerHTML = `
+                <div class="rank-badge ${rankClass}">#${rank}</div>
+                <div class="card-header">
+                    <div class="player-name"> ${boat.tekong}</div>
+                    <div class="player-tag">Boat ID: ${boat.boatId}</div>
+                    
+                </div>
+                <div class="card-body">
+                    <div class="info-row" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; font-weight: bold;">
+                        <span class="info-label" style="color: white;">Total Submissions:</span>
+                        <span class="largest-fish" style="color: white; font-size: 2em;">${boat.totalSubmissions}</span>
+                    </div>
+                    
                 </div>
             `;
             
