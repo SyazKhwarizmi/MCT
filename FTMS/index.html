@@ -246,6 +246,137 @@
             text-align: left;
             font-weight: 600;
             font-size: 0.9em;
+            position: relative;
+        }
+
+        .filter-header {
+            position: relative;
+            padding: 12px;
+        }
+
+        .filter-header > div:first-child {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+            gap: 8px;
+        }
+
+        .filter-icon {
+            cursor: pointer;
+            font-size: 1.1em;
+            padding: 4px 6px;
+            border-radius: 3px;
+            transition: background-color 0.2s;
+            flex-shrink: 0;
+        }
+
+        .filter-icon:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .filter-icon.active {
+            background-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .filter-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 2px solid #667eea;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 1000;
+            max-height: 300px;
+            overflow-y: auto;
+            display: none;
+            margin-top: 5px;
+        }
+
+        .filter-dropdown.active {
+            display: block;
+        }
+
+        .filter-content {
+            padding: 10px;
+        }
+
+        .filter-search {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            font-size: 0.9em;
+        }
+
+        .filter-options {
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .filter-option {
+            display: flex;
+            align-items: center;
+            padding: 5px;
+            cursor: pointer;
+        }
+
+        .filter-option:hover {
+            background-color: #f0f0f0;
+        }
+
+        .filter-option input[type="checkbox"] {
+            margin-right: 8px;
+            cursor: pointer;
+        }
+
+        .filter-option label {
+            cursor: pointer;
+            flex: 1;
+            font-size: 0.9em;
+            color: #333;
+        }
+
+        .filter-actions {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid #eee;
+        }
+
+        .filter-btn {
+            flex: 1;
+            padding: 6px 12px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.85em;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .filter-btn-apply {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .filter-btn-apply:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 5px rgba(102, 126, 234, 0.3);
+        }
+
+        .filter-btn-clear {
+            background: #f0f0f0;
+            color: #666;
+        }
+
+        .filter-btn-clear:hover {
+            background: #e0e0e0;
         }
 
         td {
@@ -535,15 +666,487 @@
                 </div>
             `;
 
-            // Display each sheet
-            const sheetOrder = ['Players', 'Team', 'Boat', 'submission_dev'];
-            
-            sheetOrder.forEach(sheetName => {
-                if (loadedSheets[sheetName]) {
-                    const sheetCard = createSheetCard(sheetName, loadedSheets[sheetName]);
+            // Create combined Players-Team-Boat table
+            if (loadedSheets.Players && loadedSheets.Team && loadedSheets.Boat) {
+                const combinedCard = createCombinedTable(loadedSheets.Players, loadedSheets.Team, loadedSheets.Boat);
+                combinedCard.style.gridColumn = '1 / -1'; // Make it span full width
+                container.appendChild(combinedCard);
+            } else {
+                // If not all three are available, show what we have
+                if (loadedSheets.Players) {
+                    const sheetCard = createSheetCard('Players', loadedSheets.Players);
                     container.appendChild(sheetCard);
                 }
+                if (loadedSheets.Team) {
+                    const sheetCard = createSheetCard('Team', loadedSheets.Team);
+                    container.appendChild(sheetCard);
+                }
+                if (loadedSheets.Boat) {
+                    const sheetCard = createSheetCard('Boat', loadedSheets.Boat);
+                    container.appendChild(sheetCard);
+                }
+            }
+            
+            // Display submission sheet separately below the list table
+            if (loadedSheets.submission_dev) {
+                const sheetCard = createSheetCard('submission_dev', loadedSheets.submission_dev);
+                sheetCard.style.gridColumn = '1 / -1'; // Make it span full width and appear below
+                container.appendChild(sheetCard);
+            }
+        }
+
+        // Global filter functions for Excel-like column filtering
+        function toggleFilterDropdown(columnIndex, icon) {
+            // Close all other dropdowns
+            document.querySelectorAll('.filter-dropdown').forEach(dropdown => {
+                if (dropdown.id !== `filter-${columnIndex}`) {
+                    dropdown.classList.remove('active');
+                }
             });
+            
+            document.querySelectorAll('.filter-icon').forEach(ic => {
+                if (ic !== icon) {
+                    ic.classList.remove('active');
+                }
+            });
+            
+            const dropdown = document.getElementById(`filter-${columnIndex}`);
+            dropdown.classList.toggle('active');
+            icon.classList.toggle('active');
+        }
+
+        function filterSearchOptions(columnIndex) {
+            const searchInput = document.getElementById(`filter-search-${columnIndex}`);
+            const searchTerm = searchInput.value.toLowerCase();
+            const options = document.querySelectorAll(`#filter-options-${columnIndex} .filter-option`);
+            
+            options.forEach(option => {
+                const label = option.querySelector('label').textContent.toLowerCase();
+                option.style.display = label.includes(searchTerm) ? 'flex' : 'none';
+            });
+        }
+
+        function updateFilter(columnIndex) {
+            // This function can be used for real-time filtering if needed
+        }
+
+        function toggleSelectAll(columnIndex) {
+            const selectAllCheckbox = document.getElementById(`select-all-${columnIndex}`);
+            const checkboxes = document.querySelectorAll(`.filter-checkbox-${columnIndex}`);
+            const isChecked = selectAllCheckbox.checked;
+            
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = isChecked;
+            });
+        }
+
+        function updateSelectAllState(columnIndex) {
+            const selectAllCheckbox = document.getElementById(`select-all-${columnIndex}`);
+            const checkboxes = document.querySelectorAll(`.filter-checkbox-${columnIndex}`);
+            const allChecked = Array.from(checkboxes).every(cb => cb.checked);
+            
+            selectAllCheckbox.checked = allChecked;
+        }
+
+        function updateFilterOptions(filteredData) {
+            const card = document.getElementById('combinedTable').closest('.sheet-card');
+            if (!card) return;
+            
+            // Check if any filters are actually applied (not all items selected)
+            let hasActiveFilters = false;
+            document.querySelectorAll('.filter-dropdown').forEach((dropdown, idx) => {
+                const allCheckboxes = dropdown.querySelectorAll('.filter-checkbox-' + idx);
+                const checkedCheckboxes = dropdown.querySelectorAll('.filter-checkbox-' + idx + ':checked');
+                if (allCheckboxes.length > 0 && checkedCheckboxes.length < allCheckboxes.length) {
+                    hasActiveFilters = true;
+                }
+            });
+            
+            // Use filtered data if filters are active, otherwise use original data to show all options
+            const dataToUse = hasActiveFilters ? filteredData : (card.originalData || []);
+            if (!dataToUse || dataToUse.length === 0) return;
+            
+            // Get headers
+            const headers = Array.from(document.querySelectorAll('#combinedTable thead th')).map(th => {
+                const content = th.querySelector('div');
+                return content ? content.textContent.trim() : '';
+            });
+            
+            // Calculate unique values for each column from the data
+            const columnUniqueValues = headers.map((_, colIndex) => {
+                const values = new Set();
+                dataToUse.forEach(row => {
+                    const value = (row[colIndex] || '').toString().trim();
+                    if (value) values.add(value);
+                });
+                return Array.from(values).sort();
+            });
+            
+            // Update each filter dropdown
+            headers.forEach((_, colIndex) => {
+                const dropdown = document.getElementById(`filter-${colIndex}`);
+                if (!dropdown) return;
+                
+                // Get currently selected values (before updating)
+                const currentlySelected = Array.from(dropdown.querySelectorAll('.filter-checkbox-' + colIndex + ':checked'))
+                    .map(cb => cb.value)
+                    .filter(v => v);
+                
+                // Get the filter options container
+                const optionsContainer = document.getElementById(`filter-options-${colIndex}`);
+                if (!optionsContainer) return;
+                
+                // Store the "Select All" option HTML
+                const selectAllOption = optionsContainer.querySelector('.select-all-option');
+                const selectAllHTML = selectAllOption ? selectAllOption.outerHTML : '';
+                
+                // Clear and rebuild options
+                optionsContainer.innerHTML = selectAllHTML;
+                
+                // Add updated filter options
+                columnUniqueValues[colIndex].forEach(value => {
+                    const safeId = `filter-${colIndex}-${value.replace(/[^a-zA-Z0-9]/g, '_')}`;
+                    const escapedValue = value.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+                    const isChecked = currentlySelected.includes(value);
+                    
+                    const optionDiv = document.createElement('div');
+                    optionDiv.className = 'filter-option';
+                    optionDiv.innerHTML = `
+                        <input type="checkbox" id="${safeId}" 
+                               value="${escapedValue}" 
+                               class="filter-checkbox-${colIndex}"
+                               onchange="updateSelectAllState(${colIndex})" ${isChecked ? 'checked' : ''}>
+                        <label for="${safeId}">${value}</label>
+                    `;
+                    optionsContainer.appendChild(optionDiv);
+                });
+                
+                // Re-attach event listener to Select All
+                const selectAllCheckbox = document.getElementById(`select-all-${colIndex}`);
+                if (selectAllCheckbox) {
+                    selectAllCheckbox.onchange = function() {
+                        toggleSelectAll(colIndex);
+                    };
+                }
+                
+                // Update Select All state
+                updateSelectAllState(colIndex);
+            });
+        }
+
+        function applyFilter(columnIndex) {
+            const card = document.getElementById('combinedTable').closest('.sheet-card');
+            if (!card || !card.originalData) return;
+            
+            // Get all active filters
+            const activeFilters = {};
+            document.querySelectorAll('.filter-dropdown').forEach((dropdown, idx) => {
+                // Exclude the "Select All" checkbox (it doesn't have a value attribute)
+                const checked = Array.from(dropdown.querySelectorAll('input[type="checkbox"]:checked'))
+                    .filter(cb => cb.value && cb.id !== `select-all-${idx}`)
+                    .map(cb => cb.value);
+                if (checked.length > 0) {
+                    activeFilters[idx] = checked;
+                }
+            });
+            
+            // Get headers from the table
+            const headers = Array.from(document.querySelectorAll('#combinedTable thead th')).map(th => {
+                const content = th.querySelector('div');
+                return content ? content.textContent.trim() : '';
+            });
+            
+            // Filter data
+            let filteredData = card.originalData.filter(row => {
+                return headers.every((_, colIndex) => {
+                    if (!activeFilters[colIndex]) return true; // No filter for this column
+                    const cellValue = (row[colIndex] || '').toString().trim();
+                    return activeFilters[colIndex].includes(cellValue);
+                });
+            });
+            
+            // Update table
+            card.filteredData = filteredData;
+            const tbody = document.getElementById('combinedTableBody');
+            renderTableRows(filteredData, tbody);
+            
+            // Update row count
+            const rowCountElement = document.getElementById('filteredRowCount');
+            if (rowCountElement) {
+                rowCountElement.textContent = `${filteredData.length} rows`;
+            }
+            
+            // Update all filter dropdowns based on currently displayed data
+            updateFilterOptions(filteredData);
+            
+            // Close dropdown
+            const dropdown = document.getElementById(`filter-${columnIndex}`);
+            dropdown.classList.remove('active');
+            const icon = dropdown.previousElementSibling;
+            if (icon) icon.classList.remove('active');
+        }
+
+        function clearFilter(columnIndex) {
+            const dropdown = document.getElementById(`filter-${columnIndex}`);
+            const checkboxes = dropdown.querySelectorAll('input[type="checkbox"]');
+            checkboxes.forEach(cb => cb.checked = true);
+            applyFilter(columnIndex);
+        }
+
+        function renderTableRows(data, tbody) {
+            tbody.innerHTML = '';
+            data.forEach(row => {
+                const tr = document.createElement('tr');
+                row.forEach(cellValue => {
+                    const td = document.createElement('td');
+                    td.textContent = cellValue || '';
+                    tr.appendChild(td);
+                });
+                tbody.appendChild(tr);
+            });
+        }
+
+        function createCombinedTable(playersData, teamData, boatData) {
+            const card = document.createElement('div');
+            card.className = 'sheet-card';
+            
+            // Parse headers and rows for each table
+            const playersHeaders = playersData[0].map(h => h.toLowerCase().replace(/\s+/g, '_'));
+            const playersRows = playersData.slice(1);
+            
+            const teamHeaders = teamData[0].map(h => h.toLowerCase().replace(/\s+/g, '_'));
+            const teamRows = teamData.slice(1);
+            
+            const boatHeaders = boatData[0].map(h => h.toLowerCase().replace(/\s+/g, '_'));
+            const boatRows = boatData.slice(1);
+            
+            // Create lookup maps for Team and Boat
+            const teamMap = {};
+            teamRows.forEach(row => {
+                const entry = {};
+                teamHeaders.forEach((header, index) => {
+                    entry[header] = row[index] || '';
+                });
+                const teamId = entry.teamid || entry.team_id || entry.id || '';
+                if (teamId) {
+                    teamMap[teamId] = entry;
+                }
+            });
+            
+            const boatMap = {};
+            boatRows.forEach(row => {
+                const entry = {};
+                boatHeaders.forEach((header, index) => {
+                    entry[header] = row[index] || '';
+                });
+                // Try multiple possible ID fields
+                const boatId = entry.boatid || entry.boat_id || entry.id || entry.boat_id_number || '';
+                const boatName = entry.boat_name || entry.name || entry.boatname || '';
+                const teamId = entry.teamid || entry.team_id || '';
+                // Create keys from boat ID, name, and team ID
+                if (boatId) boatMap[boatId] = entry;
+                if (boatName) boatMap[boatName] = entry;
+                if (teamId) boatMap[`team_${teamId}`] = entry;
+            });
+            
+            // Define the specific columns to show in order
+            const combinedHeaders = [
+                'Team Name',
+                'Tag',
+                'Name',
+                'Gender',
+                'Type',
+                'Team Category',
+                'Boat Id',
+                'Boat Tekong'
+            ];
+            
+            // Helper function to get value from entry by various possible column names
+            function getValue(entry, possibleNames) {
+                for (const name of possibleNames) {
+                    if (entry[name] !== undefined && entry[name] !== '') {
+                        return entry[name];
+                    }
+                }
+                return '';
+            }
+            
+            // Create combined rows
+            const combinedRows = [];
+            playersRows.forEach(playerRow => {
+                const playerEntry = {};
+                playersHeaders.forEach((header, index) => {
+                    playerEntry[header] = playerRow[index] || '';
+                });
+                
+                // Find matching team
+                const teamId = playerEntry.team_id || playerEntry.teamid || '';
+                const teamEntry = teamMap[teamId] || {};
+                
+                // Find matching boat - check multiple possible relationships
+                let boatEntry = {};
+                const playerBoatId = playerEntry.boat_id || playerEntry.boatid || '';
+                const teamBoatId = teamEntry.boat_id || teamEntry.boatid || teamEntry.boat_name || teamEntry.boatname || '';
+                const boatId = playerBoatId || teamBoatId;
+                
+                if (boatId && boatMap[boatId]) {
+                    boatEntry = boatMap[boatId];
+                } else if (teamId && boatMap[`team_${teamId}`]) {
+                    boatEntry = boatMap[`team_${teamId}`];
+                }
+                
+                // Create combined row with specific columns in order
+                const combinedRow = [
+                    // Team Name (from Team table, replacing team_id)
+                    getValue(teamEntry, ['team_name', 'teamname', 'name', 'team_name_english']),
+                    // Tag (from Players)
+                    getValue(playerEntry, ['player_tag', 'tag', 'player_tag_number']),
+                    // Name (from Players)
+                    getValue(playerEntry, ['player_name', 'name', 'full_name', 'player_name_english']),
+                    // Gender (from Players)
+                    getValue(playerEntry, ['gender', 'Gender', 'sex']),
+                    // Type (from Players)
+                    getValue(playerEntry, ['type', 'Type', 'player_type']),
+                    // Team Category (from Team)
+                    getValue(teamEntry, ['category', 'category_name', 'type', 'cat', 'team_category']),
+                    // Boat Id (from Boat)
+                    getValue(boatEntry, ['boatid', 'boat_id', 'id', 'boat_id_number']),
+                    // Boat Tekong (from Boat)
+                    getValue(boatEntry, ['boat_tekong', 'tekong', 'boat_tekong_name', 'tekong_name', 'captain', 'boat_captain'])
+                ];
+                
+                combinedRows.push(combinedRow);
+            });
+            
+            // Create card header
+            const header = document.createElement('div');
+            header.className = 'sheet-header';
+            header.innerHTML = `
+                <div class="sheet-title">👥List</div>
+                <div class="sheet-stats">
+                    <span class="sheet-stat" id="filteredRowCount">${combinedRows.length} rows</span>
+                    <span class="sheet-stat">${combinedHeaders.length} columns</span>
+                </div>
+            `;
+            
+            const tableContainer = document.createElement('div');
+            tableContainer.style.overflowX = 'auto';
+            
+            const table = document.createElement('table');
+            table.id = 'combinedTable';
+            const thead = document.createElement('thead');
+            const tbody = document.createElement('tbody');
+            tbody.id = 'combinedTableBody';
+            
+            // Store original data for filtering
+            const originalData = combinedRows.map(row => [...row]);
+            
+            // Get unique values for each column for filters
+            const columnUniqueValues = combinedHeaders.map((_, colIndex) => {
+                const values = new Set();
+                combinedRows.forEach(row => {
+                    const value = (row[colIndex] || '').toString().trim();
+                    if (value) values.add(value);
+                });
+                return Array.from(values).sort();
+            });
+            
+            // Header row with filters
+            const headerRow = document.createElement('tr');
+            combinedHeaders.forEach((headerText, colIndex) => {
+                const th = document.createElement('th');
+                th.className = 'filter-header';
+                
+                // Create a wrapper div for header content and icon
+                const headerWrapper = document.createElement('div');
+                headerWrapper.style.display = 'flex';
+                headerWrapper.style.alignItems = 'center';
+                headerWrapper.style.justifyContent = 'space-between';
+                headerWrapper.style.width = '100%';
+                
+                const headerContent = document.createElement('span');
+                headerContent.textContent = headerText;
+                headerContent.style.flex = '1';
+                headerContent.style.fontWeight = '600';
+                
+                const filterIcon = document.createElement('span');
+                filterIcon.className = 'filter-icon';
+                filterIcon.textContent = '🔽';
+                filterIcon.setAttribute('data-column', colIndex);
+                filterIcon.style.cursor = 'pointer';
+                filterIcon.onclick = function(e) {
+                    e.stopPropagation();
+                    toggleFilterDropdown(colIndex, filterIcon);
+                };
+                
+                const filterDropdown = document.createElement('div');
+                filterDropdown.className = 'filter-dropdown';
+                filterDropdown.id = `filter-${colIndex}`;
+                filterDropdown.innerHTML = createFilterContent(colIndex, columnUniqueValues[colIndex]);
+                
+                headerWrapper.appendChild(headerContent);
+                headerWrapper.appendChild(filterIcon);
+                th.appendChild(headerWrapper);
+                th.appendChild(filterDropdown);
+                headerRow.appendChild(th);
+            });
+            thead.appendChild(headerRow);
+            
+            // Data rows
+            renderTableRows(combinedRows, tbody);
+            
+            table.appendChild(thead);
+            table.appendChild(tbody);
+            tableContainer.appendChild(table);
+            
+            card.appendChild(header);
+            card.appendChild(tableContainer);
+            
+            // Store original data in the card for filtering
+            card.originalData = originalData;
+            card.filteredData = combinedRows;
+            
+            return card;
+        }
+
+        function createFilterContent(columnIndex, uniqueValues) {
+            let html = `
+                <div class="filter-content">
+                    <input type="text" class="filter-search" placeholder="Search..." id="filter-search-${columnIndex}" 
+                           onkeyup="filterSearchOptions(${columnIndex})">
+                    <div class="filter-options" id="filter-options-${columnIndex}">
+                        <div class="filter-option select-all-option" style="border-bottom: 1px solid #ddd; padding-bottom: 8px; margin-bottom: 5px;">
+                            <input type="checkbox" id="select-all-${columnIndex}" 
+                                   onchange="toggleSelectAll(${columnIndex})" checked>
+                            <label for="select-all-${columnIndex}" style="font-weight: 600;">Select All</label>
+                        </div>
+            `;
+            
+            uniqueValues.forEach(value => {
+                // Create a safe ID by replacing special characters
+                const safeId = `filter-${columnIndex}-${value.replace(/[^a-zA-Z0-9]/g, '_')}`;
+                const escapedValue = value.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+                html += `
+                    <div class="filter-option">
+                        <input type="checkbox" id="${safeId}" 
+                               value="${escapedValue}" 
+                               class="filter-checkbox-${columnIndex}"
+                               onchange="updateSelectAllState(${columnIndex})" checked>
+                        <label for="${safeId}">${value}</label>
+                    </div>
+                `;
+            });
+            
+            html += `
+                    </div>
+                    <div class="filter-actions">
+                        <button class="filter-btn filter-btn-apply" onclick="applyFilter(${columnIndex})">Apply</button>
+                        <button class="filter-btn filter-btn-clear" onclick="clearFilter(${columnIndex})">Clear</button>
+                    </div>
+                </div>
+            `;
+            
+            return html;
         }
 
         function createSheetCard(sheetName, data) {
@@ -788,6 +1391,18 @@
                 const errorDiv = document.getElementById('error');
                 errorDiv.style.display = 'block';
                 errorDiv.textContent = 'Please configure your API Key and Sheet ID in config.js file';
+            }
+        });
+
+        // Close filter dropdowns when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.filter-header')) {
+                document.querySelectorAll('.filter-dropdown').forEach(dropdown => {
+                    dropdown.classList.remove('active');
+                });
+                document.querySelectorAll('.filter-icon').forEach(icon => {
+                    icon.classList.remove('active');
+                });
             }
         });
     </script>
