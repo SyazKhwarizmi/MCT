@@ -249,6 +249,12 @@
             font-size: 0.9em;
             position: relative;
         }
+        
+        thead th {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
 
         .filter-header {
             position: relative;
@@ -1064,6 +1070,8 @@
             
             const tableContainer = document.createElement('div');
             tableContainer.style.overflowX = 'auto';
+            tableContainer.style.overflowY = 'auto';
+            tableContainer.style.maxHeight = '80vh';
             
             const table = document.createElement('table');
             table.id = 'combinedTable';
@@ -1189,43 +1197,274 @@
             const headers = data[0];
             const rows = data.slice(1);
             
+            // Create unique table ID
+            const tableId = `table-${sheetName.replace(/[^a-zA-Z0-9]/g, '_')}`;
+            const tbodyId = `${tableId}-body`;
+            
+            // Calculate unique values for each column for filters
+            const columnUniqueValues = headers.map((_, colIndex) => {
+                const values = new Set();
+                rows.forEach(row => {
+                    const value = (row[colIndex] || '').toString().trim();
+                    if (value) values.add(value);
+                });
+                return Array.from(values).sort();
+            });
+            
             const header = document.createElement('div');
             header.className = 'sheet-header';
             const displayName = sheetName === 'submission_dev' ? 'Submission' : sheetName;
             header.innerHTML = `
                 <div class="sheet-title">${getSheetIcon(sheetName)} ${displayName}</div>
                 <div class="sheet-stats">
-                    <span class="sheet-stat">${rows.length} rows</span>
+                    <span class="sheet-stat" id="${tableId}-row-count">${rows.length} rows</span>
                     <span class="sheet-stat">${headers.length} columns</span>
                 </div>
             `;
             
             const tableContainer = document.createElement('div');
             tableContainer.style.overflowX = 'auto';
+            tableContainer.style.overflowY = 'auto';
+            tableContainer.style.maxHeight = '80vh';
             
             const table = document.createElement('table');
+            table.id = tableId;
             const thead = document.createElement('thead');
             const tbody = document.createElement('tbody');
+            tbody.id = tbodyId;
             
-            // Header row
+            // Header row with filter icons (only for specific columns)
+            const filterableColumns = ['Player Tag', 'Fish Type', 'Fish Length'];
             const headerRow = document.createElement('tr');
-            headers.forEach(header => {
+            headers.forEach((headerText, colIndex) => {
                 const th = document.createElement('th');
-                th.textContent = header || 'Column';
+                const headerTextTrimmed = (headerText || '').trim();
+                const isFilterable = filterableColumns.some(col => 
+                    headerTextTrimmed.toLowerCase() === col.toLowerCase()
+                );
+                
+                if (isFilterable) {
+                    th.className = 'filter-header';
+                    th.style.position = 'relative';
+                    
+                    // Create a wrapper div for header content and icon
+                    const headerWrapper = document.createElement('div');
+                    headerWrapper.style.display = 'flex';
+                    headerWrapper.style.alignItems = 'center';
+                    headerWrapper.style.justifyContent = 'space-between';
+                    headerWrapper.style.width = '100%';
+                    
+                    const headerContent = document.createElement('span');
+                    headerContent.textContent = headerText || 'Column';
+                    headerContent.style.flex = '1';
+                    headerContent.style.fontWeight = '600';
+                    
+                    const filterIcon = document.createElement('span');
+                    filterIcon.className = 'filter-icon';
+                    filterIcon.textContent = '🔽';
+                    filterIcon.setAttribute('data-column', colIndex);
+                    filterIcon.setAttribute('data-table', tableId);
+                    filterIcon.style.cursor = 'pointer';
+                    filterIcon.onclick = function(e) {
+                        e.stopPropagation();
+                        toggleFilterDropdownForTable(colIndex, filterIcon, tableId);
+                    };
+                    
+                    const filterDropdown = document.createElement('div');
+                    filterDropdown.className = 'filter-dropdown';
+                    filterDropdown.id = `filter-${tableId}-${colIndex}`;
+                    filterDropdown.innerHTML = createFilterContentForTable(colIndex, columnUniqueValues[colIndex], tableId);
+                    
+                    headerWrapper.appendChild(headerContent);
+                    headerWrapper.appendChild(filterIcon);
+                    th.appendChild(headerWrapper);
+                    th.appendChild(filterDropdown);
+                } else {
+                    // Regular header without filter
+                    th.textContent = headerText || 'Column';
+                }
+                
                 headerRow.appendChild(th);
             });
             thead.appendChild(headerRow);
             
-            // Data rows
-            rows.forEach(row => {
+            table.appendChild(thead);
+            table.appendChild(tbody);
+            tableContainer.appendChild(table);
+            
+            card.appendChild(header);
+            card.appendChild(tableContainer);
+            
+            // Store original data in the card for filtering
+            card.originalData = rows;
+            card.filteredData = rows;
+            card.tableId = tableId;
+            
+            // Render initial rows
+            renderSheetTableRows(rows, tbody, headers);
+            
+            return card;
+        }
+        
+        function createFilterContentForTable(columnIndex, uniqueValues, tableId) {
+            let html = `
+                <div class="filter-content">
+                    <input type="text" class="filter-search" placeholder="Search..." id="filter-search-${tableId}-${columnIndex}" 
+                           onkeyup="filterSearchOptionsForTable('${tableId}', ${columnIndex})">
+                    <div class="filter-options" id="filter-options-${tableId}-${columnIndex}">
+                        <div class="filter-option select-all-option" style="border-bottom: 1px solid #ddd; padding-bottom: 8px; margin-bottom: 5px;">
+                            <input type="checkbox" id="select-all-${tableId}-${columnIndex}" 
+                                   onchange="toggleSelectAllForTable('${tableId}', ${columnIndex})" checked>
+                            <label for="select-all-${tableId}-${columnIndex}" style="font-weight: 600;">Select All</label>
+                        </div>
+            `;
+            
+            uniqueValues.forEach(value => {
+                // Create a safe ID by replacing special characters
+                const safeId = `filter-${tableId}-${columnIndex}-${value.replace(/[^a-zA-Z0-9]/g, '_')}`;
+                const escapedValue = value.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+                html += `
+                    <div class="filter-option">
+                        <input type="checkbox" id="${safeId}" 
+                               value="${escapedValue}" 
+                               class="filter-checkbox-${tableId}-${columnIndex}"
+                               onchange="updateSelectAllStateForTable('${tableId}', ${columnIndex})" checked>
+                        <label for="${safeId}">${value}</label>
+                    </div>
+                `;
+            });
+            
+            html += `
+                    </div>
+                    <div class="filter-actions">
+                        <button class="filter-btn filter-btn-apply" onclick="applyFilterForTable('${tableId}', ${columnIndex})">Apply</button>
+                        <button class="filter-btn filter-btn-clear" onclick="clearFilterForTable('${tableId}', ${columnIndex})">Clear</button>
+                    </div>
+                </div>
+            `;
+            
+            return html;
+        }
+        
+        function toggleFilterDropdownForTable(columnIndex, icon, tableId) {
+            // Close all other dropdowns for this table
+            document.querySelectorAll(`#${tableId} .filter-dropdown`).forEach(dropdown => {
+                if (dropdown.id !== `filter-${tableId}-${columnIndex}`) {
+                    dropdown.classList.remove('active');
+                }
+            });
+            
+            document.querySelectorAll(`#${tableId} .filter-icon`).forEach(ic => {
+                if (ic !== icon) {
+                    ic.classList.remove('active');
+                }
+            });
+            
+            const dropdown = document.getElementById(`filter-${tableId}-${columnIndex}`);
+            dropdown.classList.toggle('active');
+            icon.classList.toggle('active');
+        }
+        
+        function filterSearchOptionsForTable(tableId, columnIndex) {
+            const searchInput = document.getElementById(`filter-search-${tableId}-${columnIndex}`);
+            const searchTerm = searchInput.value.toLowerCase();
+            const options = document.querySelectorAll(`#filter-options-${tableId}-${columnIndex} .filter-option`);
+            
+            options.forEach(option => {
+                const label = option.querySelector('label');
+                if (label) {
+                    const labelText = label.textContent.toLowerCase();
+                    option.style.display = labelText.includes(searchTerm) ? 'flex' : 'none';
+                }
+            });
+        }
+        
+        function toggleSelectAllForTable(tableId, columnIndex) {
+            const selectAllCheckbox = document.getElementById(`select-all-${tableId}-${columnIndex}`);
+            const checkboxes = document.querySelectorAll(`.filter-checkbox-${tableId}-${columnIndex}`);
+            const isChecked = selectAllCheckbox.checked;
+            
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = isChecked;
+            });
+        }
+        
+        function updateSelectAllStateForTable(tableId, columnIndex) {
+            const selectAllCheckbox = document.getElementById(`select-all-${tableId}-${columnIndex}`);
+            const checkboxes = document.querySelectorAll(`.filter-checkbox-${tableId}-${columnIndex}`);
+            const allChecked = Array.from(checkboxes).every(cb => cb.checked);
+            
+            selectAllCheckbox.checked = allChecked;
+        }
+        
+        function applyFilterForTable(tableId, columnIndex) {
+            const card = document.getElementById(tableId).closest('.sheet-card');
+            if (!card || !card.originalData) return;
+            
+            // Get all active filters for this table
+            const activeFilters = {};
+            document.querySelectorAll(`#${tableId} .filter-dropdown`).forEach((dropdown, idx) => {
+                const checked = Array.from(dropdown.querySelectorAll('input[type="checkbox"]:checked'))
+                    .filter(cb => cb.value && cb.id !== `select-all-${tableId}-${idx}`)
+                    .map(cb => cb.value);
+                if (checked.length > 0) {
+                    activeFilters[idx] = checked;
+                }
+            });
+            
+            // Filter data
+            let filteredData = card.originalData.filter(row => {
+                return Object.keys(activeFilters).length === 0 || Object.keys(activeFilters).every(colIdx => {
+                    const colIndex = parseInt(colIdx);
+                    if (!activeFilters[colIndex]) return true; // No filter for this column
+                    const cellValue = (row[colIndex] || '').toString().trim();
+                    return activeFilters[colIndex].includes(cellValue);
+                });
+            });
+            
+            // Update table
+            card.filteredData = filteredData;
+            const tbody = document.getElementById(`${tableId}-body`);
+            const headers = Array.from(document.querySelectorAll(`#${tableId} thead th`)).map(th => {
+                const content = th.querySelector('span');
+                return content ? content.textContent.trim() : '';
+            });
+            renderSheetTableRows(filteredData, tbody, headers);
+            
+            // Update row count
+            const rowCountElement = document.getElementById(`${tableId}-row-count`);
+            if (rowCountElement) {
+                rowCountElement.textContent = `${filteredData.length} rows`;
+            }
+            
+            // Close dropdown
+            const dropdown = document.getElementById(`filter-${tableId}-${columnIndex}`);
+            dropdown.classList.remove('active');
+            const headerWrapper = dropdown.previousElementSibling;
+            if (headerWrapper) {
+                const icon = headerWrapper.querySelector('.filter-icon');
+                if (icon) icon.classList.remove('active');
+            }
+        }
+        
+        function clearFilterForTable(tableId, columnIndex) {
+            const dropdown = document.getElementById(`filter-${tableId}-${columnIndex}`);
+            const checkboxes = dropdown.querySelectorAll('input[type="checkbox"]');
+            checkboxes.forEach(cb => cb.checked = true);
+            applyFilterForTable(tableId, columnIndex);
+        }
+        
+        function renderSheetTableRows(data, tbody, headers) {
+            tbody.innerHTML = '';
+            data.forEach(row => {
                 const tr = document.createElement('tr');
-                headers.forEach((_, index) => {
+                headers.forEach((headerText, index) => {
                     const td = document.createElement('td');
                     const cellValue = row[index] || '';
-                    const columnName = (headers[index] || '').toLowerCase();
+                    const columnName = (headerText || '').toLowerCase();
                     
                     // Check if it's a URL/link
-                    if (cellValue.startsWith('http://') || cellValue.startsWith('https://')) {
+                    if (cellValue && (cellValue.startsWith('http://') || cellValue.startsWith('https://'))) {
                         // Check if it's an image URL (by URL pattern or column name)
                         if (isImageUrl(cellValue, columnName)) {
                             const imgContainer = document.createElement('div');
@@ -1237,7 +1476,6 @@
                             if (originalUrl.includes('drive.google.com')) {
                                 const fileId = extractGoogleDriveFileId(originalUrl);
                                 if (fileId) {
-                                    
                                     // Try to load as image first
                                     const img = document.createElement('img');
                                     const convertedUrl = `https://drive.google.com/uc?export=view&id=${fileId}`;
@@ -1246,7 +1484,6 @@
                                     img.loading = 'lazy';
                                     
                                     img.onload = function() {
-                                        // Image loaded successfully - make it clickable
                                         img.style.cursor = 'pointer';
                                         img.onclick = function() {
                                             window.open(originalUrl, '_blank');
@@ -1254,7 +1491,6 @@
                                     };
                                     
                                     img.onerror = function() {
-                                        // If image fails, use iframe preview
                                         img.style.display = 'none';
                                         const iframe = document.createElement('iframe');
                                         iframe.src = `https://drive.google.com/file/d/${fileId}/preview`;
@@ -1272,7 +1508,6 @@
                                     
                                     imgContainer.appendChild(img);
                                 } else {
-                                    // Can't extract file ID, show as link
                                     const link = document.createElement('a');
                                     link.href = originalUrl;
                                     link.target = '_blank';
@@ -1281,7 +1516,6 @@
                                     imgContainer.appendChild(link);
                                 }
                             } else {
-                                // Not a Google Drive link - try regular image loading
                                 const img = document.createElement('img');
                                 img.src = convertToImageUrl(originalUrl);
                                 img.alt = 'Image';
@@ -1325,15 +1559,6 @@
                 });
                 tbody.appendChild(tr);
             });
-            
-            table.appendChild(thead);
-            table.appendChild(tbody);
-            tableContainer.appendChild(table);
-            
-            card.appendChild(header);
-            card.appendChild(tableContainer);
-            
-            return card;
         }
 
         function getSheetIcon(sheetName) {

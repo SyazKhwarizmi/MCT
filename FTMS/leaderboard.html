@@ -108,6 +108,54 @@
             border-color: #667eea;
         }
 
+        .toggle-label {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .toggle-checkbox {
+            display: none;
+        }
+
+        .toggle-slider {
+            position: relative;
+            width: 50px;
+            height: 26px;
+            background-color: #ccc;
+            border-radius: 26px;
+            transition: background-color 0.3s;
+        }
+
+        .toggle-slider:before {
+            content: "";
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background-color: white;
+            top: 3px;
+            left: 3px;
+            transition: transform 0.3s;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .toggle-checkbox:checked + .toggle-slider {
+            background-color: #667eea;
+        }
+
+        .toggle-checkbox:checked + .toggle-slider:before {
+            transform: translateX(24px);
+        }
+
+        .toggle-text {
+            font-weight: 600;
+            color: #333;
+            font-size: 1em;
+        }
+
         .loading {
             text-align: center;
             padding: 40px;
@@ -459,6 +507,13 @@
                     <option value="all">All</option>
                 </select>
             </div>
+            <div class="filter-group">
+                <label class="toggle-label">
+                    <input type="checkbox" id="videoBonusToggle" class="toggle-checkbox">
+                    <span class="toggle-slider"></span>
+                    <span class="toggle-text">+10 Points for Video</span>
+                </label>
+            </div>
         </div>
 
         <div id="loading" class="loading">
@@ -544,6 +599,7 @@
                 populateFishTypeFilter();
                 populateCategoryFilter();
                 populatePlayerTypeFilter();
+                setupVideoBonusToggle();
 
                 // Display leaderboard
                 displayLeaderboard();
@@ -774,6 +830,15 @@
             });
         }
 
+        function setupVideoBonusToggle() {
+            const toggle = document.getElementById('videoBonusToggle');
+            if (toggle) {
+                toggle.addEventListener('change', function() {
+                    displayLeaderboard();
+                });
+            }
+        }
+
         function displayLeaderboard() {
             const container = document.getElementById('leaderboardContainer');
             const statsDiv = document.getElementById('statsSummary');
@@ -812,10 +877,22 @@
                 });
             }
 
-            // Sort by fish length (descending)
+            // Get toggle state
+            const videoBonusEnabled = document.getElementById('videoBonusToggle').checked;
+            
+            // Sort by fish length (descending), with +10 bonus for video if enabled
             filtered.sort((a, b) => {
-                const lengthA = parseFloat(a.fish_lenght) || 0;
-                const lengthB = parseFloat(b.fish_lenght) || 0;
+                let lengthA = parseFloat(a.fish_lenght) || 0;
+                let lengthB = parseFloat(b.fish_lenght) || 0;
+                
+                // Add +10 bonus if video exists and toggle is enabled
+                if (videoBonusEnabled) {
+                    const hasVideoA = (a.release_video || '').trim() !== '';
+                    const hasVideoB = (b.release_video || '').trim() !== '';
+                    if (hasVideoA) lengthA += 10;
+                    if (hasVideoB) lengthB += 10;
+                }
+                
                 return lengthB - lengthA;
             });
 
@@ -866,7 +943,14 @@
                 const playerTeamId = player.team_id || player.teamid;
                 const team = teamsData[playerTeamId] || {};
                 
-                const card = createLeaderboardCard(submission, player, team, rank);
+                // Calculate adjusted length for display
+                let displayLength = parseFloat(submission.fish_lenght) || 0;
+                const hasVideo = (submission.release_video || '').trim() !== '';
+                if (videoBonusEnabled && hasVideo) {
+                    displayLength += 10;
+                }
+                
+                const card = createLeaderboardCard(submission, player, team, rank, displayLength, hasVideo && videoBonusEnabled);
                 container.appendChild(card);
             });
         }
@@ -913,7 +997,7 @@
             }
         }
 
-        function createLeaderboardCard(submission, player, team, rank) {
+        function createLeaderboardCard(submission, player, team, rank, displayLength, hasVideoBonus) {
             const card = document.createElement('div');
             card.className = 'leaderboard-card';
             
@@ -922,7 +1006,8 @@
             const playerName = player.player_name || `Player ${submission.player_tag}`;
             const teamName = team.team_name || team.teamid || 'Unknown Team';
             const teamCategory = team.category || team.category_name || team.type || 'Unknown';
-            const fishLength = parseFloat(submission.fish_lenght) || 0;
+            const fishLength = displayLength || parseFloat(submission.fish_lenght) || 0;
+            const originalLength = parseFloat(submission.fish_lenght) || 0;
             
             // Get image URL from "Picture of Fish's Length" column (with backward compatibility)
             const imageUrl = submission.picture_of_fish_length || submission.fish_lenght_picture || '';
@@ -981,7 +1066,10 @@
                     ${imageHTML}
                     <div class="info-row">
                         <span class="info-label">Fish Length:</span>
-                        <span class="fish-length">${fishLength.toFixed(1)} cm</span>
+                        <span class="fish-length">
+                            ${fishLength.toFixed(1)} cm
+                            ${hasVideoBonus ? `<span style="color: #4caf50; font-weight: bold; margin-left: 5px;">(+10 video bonus)</span>` : ''}
+                        </span>
                     </div>
                     <div class="info-row">
                         <span class="info-label">Player Tag:</span>
