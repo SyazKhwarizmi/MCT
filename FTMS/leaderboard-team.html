@@ -561,6 +561,9 @@
         }
 
         function calculateKingImctPoints(teamId) {
+            // Get toggle state
+            const videoBonusEnabled = document.getElementById('videoBonusToggle') ? document.getElementById('videoBonusToggle').checked : false;
+            
             // Get team's category (boat or kayak)
             const teamInfo = teamsData[teamId] || {};
             const teamCategory = (teamInfo.category || teamInfo.category_name || teamInfo.type || '').toString().toLowerCase().trim();
@@ -574,6 +577,16 @@
                 return (subTeamInfo.category || subTeamInfo.category_name || subTeamInfo.type || '').toString().toLowerCase().trim();
             }
             
+            // Helper function to get adjusted length (with video bonus if enabled)
+            function getAdjustedLength(submission) {
+                let length = parseFloat(submission.fish_lenght || submission.fish_length) || 0;
+                if (videoBonusEnabled) {
+                    const hasVideo = (submission.release_video || '').trim() !== '';
+                    if (hasVideo) length += 10;
+                }
+                return length;
+            }
+            
             // Find the longest Sebarau in the same category as the team
             const allSebarau = allSubmissions
                 .filter(s => {
@@ -583,7 +596,7 @@
                 })
                 .map(s => ({
                     submission: s,
-                    length: parseFloat(s.fish_lenght || s.fish_length) || 0
+                    length: getAdjustedLength(s)
                 }))
                 .filter(s => s.length > 0)
                 .sort((a, b) => b.length - a.length);
@@ -599,7 +612,7 @@
                 })
                 .map(s => ({
                     submission: s,
-                    length: parseFloat(s.fish_lenght || s.fish_length) || 0
+                    length: getAdjustedLength(s)
                 }))
                 .filter(s => s.length > 0)
                 .sort((a, b) => b.length - a.length);
