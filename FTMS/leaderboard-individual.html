@@ -601,6 +601,9 @@
                 const averageLength = player.fishLengths.length > 0 
                     ? player.fishLengths.reduce((a, b) => a + b, 0) / player.fishLengths.length 
                     : 0;
+                const totalPoints = player.fishLengths.length > 0 
+                    ? player.fishLengths.reduce((a, b) => a + b, 0) 
+                    : 0;
 
                 return {
                     playerTag: player.playerTag,
@@ -610,6 +613,7 @@
                     totalSubmissions: totalSubmissions,
                     bestFish: bestFish,
                     averageLength: averageLength,
+                    totalPoints: totalPoints,
                     fishTypes: Array.from(player.fishTypes),
                     gender: playerInfo.gender || playerInfo.Gender || ''
                 };
@@ -625,8 +629,13 @@
                     return gender === 'F';
                 });
                 
-                // Sort by number of submissions (descending) for Best Of Lady Angler
-                playerRankings.sort((a, b) => b.totalSubmissions - a.totalSubmissions);
+                // Sort by number of submissions (descending), then by total points (descending) for Best Of Lady Angler
+                playerRankings.sort((a, b) => {
+                    if (b.totalSubmissions !== a.totalSubmissions) {
+                        return b.totalSubmissions - a.totalSubmissions;
+                    }
+                    return b.totalPoints - a.totalPoints;
+                });
             } else if (selectedCategory === 'best_of_kayaker') {
                 // Filter to only show players from teams with category = "Kayak"
                 playerRankings = playerRankings.filter(player => {
@@ -636,8 +645,13 @@
                     return teamCategory === 'kayak';
                 });
                 
-                // Sort by number of submissions (descending) for Best of Kayaker
-                playerRankings.sort((a, b) => b.totalSubmissions - a.totalSubmissions);
+                // Sort by number of submissions (descending), then by total points (descending) for Best of Kayaker
+                playerRankings.sort((a, b) => {
+                    if (b.totalSubmissions !== a.totalSubmissions) {
+                        return b.totalSubmissions - a.totalSubmissions;
+                    }
+                    return b.totalPoints - a.totalPoints;
+                });
             } else if (selectedCategory === 'best_of_international_angler') {
                 // Filter to only show players with Type = "International" (or similar)
                 playerRankings = playerRankings.filter(player => {
@@ -647,8 +661,13 @@
                     return playerType === 'international';
                 });
                 
-                // Sort by number of submissions (descending) for Best Of International Angler
-                playerRankings.sort((a, b) => b.totalSubmissions - a.totalSubmissions);
+                // Sort by number of submissions (descending), then by total points (descending) for Best Of International Angler
+                playerRankings.sort((a, b) => {
+                    if (b.totalSubmissions !== a.totalSubmissions) {
+                        return b.totalSubmissions - a.totalSubmissions;
+                    }
+                    return b.totalPoints - a.totalPoints;
+                });
             } else if (selectedCategory === 'best_of_angler_boater') {
                 // Filter to only show local type players with boating category
                 playerRankings = playerRankings.filter(player => {
@@ -664,8 +683,13 @@
                     return playerType === 'local' && (teamCategory === 'boating' || teamCategory === 'boat' || teamCategory === 'boater');
                 });
                 
-                // Sort by number of submissions (descending) for Best of Angler Boater
-                playerRankings.sort((a, b) => b.totalSubmissions - a.totalSubmissions);
+                // Sort by number of submissions (descending), then by total points (descending) for Best of Angler Boater
+                playerRankings.sort((a, b) => {
+                    if (b.totalSubmissions !== a.totalSubmissions) {
+                        return b.totalSubmissions - a.totalSubmissions;
+                    }
+                    return b.totalPoints - a.totalPoints;
+                });
             } else if (selectedCategory === 'best_of_international_guide') {
                 // For international guide, we need to show boats grouped by boat ID
                 // This will be handled separately in the display section
@@ -712,16 +736,23 @@
                                 boatId: boatId,
                                 tekong: tekong || 'N/A',
                                 totalSubmissions: 0,
+                                totalPoints: 0,
                                 players: []
                             };
                         }
                         boatGroups[boatId].totalSubmissions += player.totalSubmissions;
+                        boatGroups[boatId].totalPoints += player.totalPoints;
                         boatGroups[boatId].players.push(player);
                     }
                 });
 
-                // Convert to array and sort by total submissions
-                const boatRankings = Object.values(boatGroups).sort((a, b) => b.totalSubmissions - a.totalSubmissions);
+                // Convert to array and sort by total submissions (descending), then by total points (descending)
+                const boatRankings = Object.values(boatGroups).sort((a, b) => {
+                    if (b.totalSubmissions !== a.totalSubmissions) {
+                        return b.totalSubmissions - a.totalSubmissions;
+                    }
+                    return b.totalPoints - a.totalPoints;
+                });
 
                 if (boatRankings.length === 0) {
                     container.innerHTML = `
@@ -798,16 +829,23 @@
                                 boatId: boatId,
                                 tekong: tekong || 'N/A',
                                 totalSubmissions: 0,
+                                totalPoints: 0,
                                 players: []
                             };
                         }
                         boatGroups[boatId].totalSubmissions += player.totalSubmissions;
+                        boatGroups[boatId].totalPoints += player.totalPoints;
                         boatGroups[boatId].players.push(player);
                     }
                 });
 
-                // Convert to array and sort by total submissions
-                const boatRankings = Object.values(boatGroups).sort((a, b) => b.totalSubmissions - a.totalSubmissions);
+                // Convert to array and sort by total submissions (descending), then by total points (descending)
+                const boatRankings = Object.values(boatGroups).sort((a, b) => {
+                    if (b.totalSubmissions !== a.totalSubmissions) {
+                        return b.totalSubmissions - a.totalSubmissions;
+                    }
+                    return b.totalPoints - a.totalPoints;
+                });
 
                 if (boatRankings.length === 0) {
                     container.innerHTML = `
@@ -871,16 +909,23 @@
                                 teamId: player.teamId,
                                 teamName: player.teamName,
                                 totalSubmissions: 0,
+                                totalPoints: 0,
                                 players: []
                             };
                         }
                         sponsoredTeams[player.teamId].totalSubmissions += player.totalSubmissions;
+                        sponsoredTeams[player.teamId].totalPoints += player.totalPoints;
                         sponsoredTeams[player.teamId].players.push(player);
                     }
                 });
 
-                // Convert to array and sort by total submissions
-                const teamRankings = Object.values(sponsoredTeams).sort((a, b) => b.totalSubmissions - a.totalSubmissions);
+                // Convert to array and sort by total submissions (descending), then by total points (descending)
+                const teamRankings = Object.values(sponsoredTeams).sort((a, b) => {
+                    if (b.totalSubmissions !== a.totalSubmissions) {
+                        return b.totalSubmissions - a.totalSubmissions;
+                    }
+                    return b.totalPoints - a.totalPoints;
+                });
 
                 if (teamRankings.length === 0) {
                     container.innerHTML = `
