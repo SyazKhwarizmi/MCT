@@ -290,7 +290,8 @@
             position: absolute;
             top: 100%;
             left: 0;
-            right: 0;
+            width: 300px;
+            min-width: 250px;
             background: white;
             border: 2px solid #667eea;
             border-radius: 8px;
@@ -300,7 +301,8 @@
             overflow-y: auto;
             display: none;
             margin-top: 5px;
-            text-align: left;
+            text-align: left !important;
+            direction: ltr !important;
         }
 
         .filter-dropdown.active {
@@ -309,7 +311,10 @@
 
         .filter-content {
             padding: 10px;
-            text-align: left;
+            text-align: left !important;
+            direction: ltr !important;
+            width: 100%;
+            box-sizing: border-box;
         }
 
         .filter-search {
@@ -319,13 +324,17 @@
             border-radius: 5px;
             margin-bottom: 10px;
             font-size: 0.9em;
-            text-align: left;
+            text-align: left !important;
+            direction: ltr !important;
         }
 
         .filter-options {
             max-height: 200px;
             overflow-y: auto;
-            text-align: left;
+            text-align: left !important;
+            direction: ltr !important;
+            padding: 0;
+            margin: 0;
         }
 
         .filter-option {
@@ -333,8 +342,10 @@
             align-items: center;
             padding: 5px;
             cursor: pointer;
-            text-align: left;
-            justify-content: flex-start;
+            text-align: left !important;
+            justify-content: flex-start !important;
+            direction: ltr !important;
+            gap: 8px;
         }
 
         .filter-option:hover {
@@ -342,16 +353,25 @@
         }
 
         .filter-option input[type="checkbox"] {
-            margin-right: 8px;
+            margin: 0 !important;
             cursor: pointer;
+            flex-shrink: 0;
+            width: auto;
         }
 
         .filter-option label {
             cursor: pointer;
-            flex: 1;
             font-size: 0.9em;
             color: #333;
-            text-align: left;
+            text-align: left !important;
+            direction: ltr !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            white-space: nowrap;
+            flex: 0 1 auto;
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .select-all-option {
@@ -365,12 +385,13 @@
 
         .filter-actions {
             display: flex;
-            justify-content: flex-start;
+            justify-content: flex-start !important;
             gap: 10px;
             margin-top: 10px;
             padding-top: 10px;
             border-top: 1px solid #eee;
-            text-align: left;
+            text-align: left !important;
+            direction: ltr !important;
         }
 
         .filter-btn {
@@ -781,92 +802,6 @@
             selectAllCheckbox.checked = allChecked;
         }
 
-        function updateFilterOptions(filteredData) {
-            const card = document.getElementById('combinedTable').closest('.sheet-card');
-            if (!card) return;
-            
-            // Check if any filters are actually applied (not all items selected)
-            let hasActiveFilters = false;
-            document.querySelectorAll('.filter-dropdown').forEach((dropdown, idx) => {
-                const allCheckboxes = dropdown.querySelectorAll('.filter-checkbox-' + idx);
-                const checkedCheckboxes = dropdown.querySelectorAll('.filter-checkbox-' + idx + ':checked');
-                if (allCheckboxes.length > 0 && checkedCheckboxes.length < allCheckboxes.length) {
-                    hasActiveFilters = true;
-                }
-            });
-            
-            // Use filtered data if filters are active, otherwise use original data to show all options
-            const dataToUse = hasActiveFilters ? filteredData : (card.originalData || []);
-            if (!dataToUse || dataToUse.length === 0) return;
-            
-            // Get headers
-            const headers = Array.from(document.querySelectorAll('#combinedTable thead th')).map(th => {
-                const content = th.querySelector('div');
-                return content ? content.textContent.trim() : '';
-            });
-            
-            // Calculate unique values for each column from the data
-            const columnUniqueValues = headers.map((_, colIndex) => {
-                const values = new Set();
-                dataToUse.forEach(row => {
-                    const value = (row[colIndex] || '').toString().trim();
-                    if (value) values.add(value);
-                });
-                return Array.from(values).sort();
-            });
-            
-            // Update each filter dropdown
-            headers.forEach((_, colIndex) => {
-                const dropdown = document.getElementById(`filter-${colIndex}`);
-                if (!dropdown) return;
-                
-                // Get currently selected values (before updating)
-                const currentlySelected = Array.from(dropdown.querySelectorAll('.filter-checkbox-' + colIndex + ':checked'))
-                    .map(cb => cb.value)
-                    .filter(v => v);
-                
-                // Get the filter options container
-                const optionsContainer = document.getElementById(`filter-options-${colIndex}`);
-                if (!optionsContainer) return;
-                
-                // Store the "Select All" option HTML
-                const selectAllOption = optionsContainer.querySelector('.select-all-option');
-                const selectAllHTML = selectAllOption ? selectAllOption.outerHTML : '';
-                
-                // Clear and rebuild options
-                optionsContainer.innerHTML = selectAllHTML;
-                
-                // Add updated filter options
-                columnUniqueValues[colIndex].forEach(value => {
-                    const safeId = `filter-${colIndex}-${value.replace(/[^a-zA-Z0-9]/g, '_')}`;
-                    const escapedValue = value.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-                    const isChecked = currentlySelected.includes(value);
-                    
-                    const optionDiv = document.createElement('div');
-                    optionDiv.className = 'filter-option';
-                    optionDiv.innerHTML = `
-                        <input type="checkbox" id="${safeId}" 
-                               value="${escapedValue}" 
-                               class="filter-checkbox-${colIndex}"
-                               onchange="updateSelectAllState(${colIndex})" ${isChecked ? 'checked' : ''}>
-                        <label for="${safeId}">${value}</label>
-                    `;
-                    optionsContainer.appendChild(optionDiv);
-                });
-                
-                // Re-attach event listener to Select All
-                const selectAllCheckbox = document.getElementById(`select-all-${colIndex}`);
-                if (selectAllCheckbox) {
-                    selectAllCheckbox.onchange = function() {
-                        toggleSelectAll(colIndex);
-                    };
-                }
-                
-                // Update Select All state
-                updateSelectAllState(colIndex);
-            });
-        }
-
         function applyFilter(columnIndex) {
             const card = document.getElementById('combinedTable').closest('.sheet-card');
             if (!card || !card.originalData) return;
@@ -908,9 +843,6 @@
             if (rowCountElement) {
                 rowCountElement.textContent = `${filteredData.length} rows`;
             }
-            
-            // Update all filter dropdowns based on currently displayed data
-            updateFilterOptions(filteredData);
             
             // Close dropdown
             const dropdown = document.getElementById(`filter-${columnIndex}`);
