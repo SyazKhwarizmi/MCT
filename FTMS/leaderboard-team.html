@@ -561,292 +561,146 @@
         }
 
         function calculateKingImctPoints(teamId) {
-            // Get toggle state
-            const videoBonusEnabled = document.getElementById('videoBonusToggle') ? document.getElementById('videoBonusToggle').checked : false;
-            
-            // Get team's category (boat or kayak)
-            const teamInfo = teamsData[teamId] || {};
-            const teamCategory = (teamInfo.category || teamInfo.category_name || teamInfo.type || '').toString().toLowerCase().trim();
-            
-            // Returns an array of the N longest submissions by fish type (Sebarau or Toman)
-function getTopNGlobal(submissions, fishType, getSubmissionCategory, teamCategory, getAdjustedLength, N) {
-    return submissions
-        .filter(s => {
-            if (!s.fish_type || s.fish_type.toLowerCase() !== fishType.toLowerCase()) return false;
-            return getSubmissionCategory(s) === teamCategory;
-        })
-        .map(s => ({
-            submission: s,
-            length: getAdjustedLength(s)
-        }))
-        .filter(s => s.length > 0)
-        .sort((a, b) => b.length - a.length)
-        .slice(0, N);
-}
-            
-            // Helper function to get a submission's team category
-            function getSubmissionCategory(submission) {
-                const player = playersData[submission.player_tag] || {};
-                const playerTeamId = player.team_id || player.teamid;
-                if (!playerTeamId) return '';
-                const subTeamInfo = teamsData[playerTeamId] || {};
-                return (subTeamInfo.category || subTeamInfo.category_name || subTeamInfo.type || '').toString().toLowerCase().trim();
-            }
-            
-            // Helper function to get adjusted length (with video bonus if enabled)
-            function getAdjustedLength(submission) {
-                let length = parseFloat(submission.fish_lenght || submission.fish_length) || 0;
-                if (videoBonusEnabled) {
-                    const hasVideo = (submission.release_video || '').trim() !== '';
-                    if (hasVideo) length += 10;
-                }
-                return length;
-            }
-            
-            // Get top 3 longest Sebarau globally (same category)
-const top3SebarauGlobal = getTopNGlobal(
-    allSubmissions, "sebarau",
-    getSubmissionCategory, teamCategory, getAdjustedLength, 3
-).map(x => x.submission);
+    const videoBonusEnabled = document.getElementById('videoBonusToggle')?.checked ?? false;
 
-// Get top 3 longest Toman globally (same category)
-const top3TomanGlobal = getTopNGlobal(
-    allSubmissions, "toman",
-    getSubmissionCategory, teamCategory, getAdjustedLength, 3
-).map(x => x.submission);
+    const teamInfo = teamsData[teamId] || {};
+    const teamCategory = (teamInfo.category || teamInfo.category_name || teamInfo.type || '')
+        .toString().toLowerCase().trim();
 
-// Helper to check if submission is in excluded top N
-function isExcluded(sub, excludedList) {
-    return excludedList.some(ex => 
-        ex.player_tag === sub.player_tag &&
-        (ex.fish_lenght || ex.fish_length) === (sub.fish_lenght || sub.fish_length)
-    );
-}
+    // All submissions belonging to this team
+    const teamSubmissions = allSubmissions.filter(sub => {
+        const player = playersData[sub.player_tag] || {};
+        const tId = player.team_id || player.teamid;
+        return tId == teamId;
+    });
 
-// TEAM Sebarau after removing TOP 3 global
-const sebarauSubmissions = teamSubmissions
-    .filter(s => s.fish_type?.toLowerCase() === "sebarau")
-    .filter(s => !isExcluded(s, top3SebarauGlobal))
-    .map(s => getAdjustedLength(s))
-    .filter(len => len > 0)
-    .sort((a, b) => b - a);
+    function getSubmissionCategory(sub) {
+        const player = playersData[sub.player_tag] || {};
+        const tId = player.team_id || player.teamid;
+        const tInfo = teamsData[tId] || {};
+        return (tInfo.category || tInfo.category_name || tInfo.type || '')
+            .toString().toLowerCase().trim();
+    }
 
-// TEAM Toman after removing TOP 3 global
-const tomanSubmissions = teamSubmissions
-    .filter(s => s.fish_type?.toLowerCase() === "toman")
-    .filter(s => !isExcluded(s, top3TomanGlobal))
-    .map(s => getAdjustedLength(s))
-    .filter(len => len > 0)
-    .sort((a, b) => b - a);
-
-// Now score
-const top3Sebarau = sebarauSubmissions.slice(0, 3).reduce((a, b) => a + b, 0);
-const top2Toman = tomanSubmissions.slice(0, 2).reduce((a, b) => a + b, 0);
-
-return top3Sebarau + top2Toman;
-            // Get all submissions for this team (not filtered by fish type)
-            const teamSubmissions = allSubmissions.filter(submission => {
-                const player = playersData[submission.player_tag] || {};
-                const playerTeamId = player.team_id || player.teamid;
-                return playerTeamId == teamId;
-            });
-
-            // Helper function to check if a submission matches the longest fish of its type
-            function isLongestSebarau(submission) {
-                if (!longestSebarau) return false;
-                const sub = longestSebarau.submission;
-                const subLength = getAdjustedLength(submission);
-                return subLength === longestSebarau.length &&
-                       submission.player_tag === sub.player_tag &&
-                       (submission.fish_lenght || submission.fish_length) === (sub.fish_lenght || sub.fish_length);
-            }
-
-            function isLongestToman(submission) {
-                if (!longestToman) return false;
-                const sub = longestToman.submission;
-                const subLength = getAdjustedLength(submission);
-                return subLength === longestToman.length &&
-                       submission.player_tag === sub.player_tag &&
-                       (submission.fish_lenght || submission.fish_length) === (sub.fish_lenght || sub.fish_length);
-            }
-
-            // Get Sebarau submissions, excluding the longest Sebarau
-            const sebarauSubmissions = teamSubmissions
-                .filter(s => {
-                    // First check if it's a Sebarau
-                    if (!s.fish_type || s.fish_type.toLowerCase() !== 'sebarau') {
-                        return false;
-                    }
-                    // Exclude if it's the longest Sebarau
-                    return !isLongestSebarau(s);
-                })
-                .map(s => getAdjustedLength(s))
-                .filter(length => length > 0)
-                .sort((a, b) => b - a);
-
-            // Get Toman submissions, excluding the longest Toman
-            const tomanSubmissions = teamSubmissions
-                .filter(s => {
-                    // First check if it's a Toman
-                    if (!s.fish_type || s.fish_type.toLowerCase() !== 'toman') {
-                        return false;
-                    }
-                    // Exclude if it's the longest Toman
-                    return !isLongestToman(s);
-                })
-                .map(s => getAdjustedLength(s))
-                .filter(length => length > 0)
-                .sort((a, b) => b - a);
-
-            // Sum top 3 Sebarau + top 2 Toman
-            const top3Sebarau = sebarauSubmissions.slice(0, 3).reduce((sum, length) => sum + length, 0);
-            const top2Toman = tomanSubmissions.slice(0, 2).reduce((sum, length) => sum + length, 0);
-
-            return top3Sebarau + top2Toman;
+    function getAdjustedLength(sub) {
+        let len = parseFloat(sub.fish_lenght || sub.fish_length) || 0;
+        if (videoBonusEnabled) {
+            const hasVid = (sub.release_video || '').trim() !== '';
+            if (hasVid) len += 10;
         }
+        return len;
+    }
 
-        function calculateKingImctBreakdown(teamId) {
-            // Get toggle state
-            const videoBonusEnabled = document.getElementById('videoBonusToggle') ? document.getElementById('videoBonusToggle').checked : false;
-            
-            // Get team's category (boat or kayak)
-            const teamInfo = teamsData[teamId] || {};
-            const teamCategory = (teamInfo.category || teamInfo.category_name || teamInfo.type || '').toString().toLowerCase().trim();
-            
-            // Returns an array of the N longest submissions by fish type (Sebarau or Toman)
-function getTopNGlobal(submissions, fishType, getSubmissionCategory, teamCategory, getAdjustedLength, N) {
-    return submissions
-        .filter(s => {
-            if (!s.fish_type || s.fish_type.toLowerCase() !== fishType.toLowerCase()) return false;
-            return getSubmissionCategory(s) === teamCategory;
-        })
-        .map(s => ({
-            submission: s,
-            length: getAdjustedLength(s)
-        }))
-        .filter(s => s.length > 0)
-        .sort((a, b) => b.length - a.length)
-        .slice(0, N);
-}
-            
-            // Helper function to get a submission's team category
-            function getSubmissionCategory(submission) {
-                const player = playersData[submission.player_tag] || {};
-                const playerTeamId = player.team_id || player.teamid;
-                if (!playerTeamId) return '';
-                const subTeamInfo = teamsData[playerTeamId] || {};
-                return (subTeamInfo.category || subTeamInfo.category_name || subTeamInfo.type || '').toString().toLowerCase().trim();
-            }
-            
-            // Helper function to get adjusted length (with video bonus if enabled)
-            function getAdjustedLength(submission) {
-                let length = parseFloat(submission.fish_lenght || submission.fish_length) || 0;
-                if (videoBonusEnabled) {
-                    const hasVideo = (submission.release_video || '').trim() !== '';
-                    if (hasVideo) length += 10;
-                }
-                return length;
-            }
-            
-            const top3SebarauGlobal = getTopNGlobal(
-    allSubmissions, "sebarau",
-    getSubmissionCategory, teamCategory, getAdjustedLength, 3
-).map(x => x.submission);
+    function getTopNGlobal(fishType, N) {
+        return allSubmissions
+            .filter(s => s.fish_type?.toLowerCase() === fishType && getSubmissionCategory(s) === teamCategory)
+            .map(s => ({ submission: s, length: getAdjustedLength(s) }))
+            .filter(x => x.length > 0)
+            .sort((a, b) => b.length - a.length)
+            .slice(0, N)
+            .map(x => x.submission);
+    }
 
-const top3TomanGlobal = getTopNGlobal(
-    allSubmissions, "toman",
-    getSubmissionCategory, teamCategory, getAdjustedLength, 3
-).map(x => x.submission);
+    const top3SebarauGlobal = getTopNGlobal("sebarau", 3);
+    const top3TomanGlobal = getTopNGlobal("toman", 3);
 
-function isExcluded(sub, excludedList) {
-    return excludedList.some(ex => 
-        ex.player_tag === sub.player_tag &&
-        (ex.fish_lenght || ex.fish_length) === (sub.fish_lenght || sub.fish_length)
-    );
+    function isExcluded(sub, list) {
+        return list.some(ex =>
+            ex.player_tag === sub.player_tag &&
+            (ex.fish_lenght || ex.fish_length) === (sub.fish_lenght || sub.fish_length)
+        );
+    }
+
+    const sebarauSubmissions = teamSubmissions
+        .filter(s => s.fish_type?.toLowerCase() === "sebarau")
+        .filter(s => !isExcluded(s, top3SebarauGlobal))
+        .map(s => getAdjustedLength(s))
+        .filter(len => len > 0)
+        .sort((a, b) => b - a);
+
+    const tomanSubmissions = teamSubmissions
+        .filter(s => s.fish_type?.toLowerCase() === "toman")
+        .filter(s => !isExcluded(s, top3TomanGlobal))
+        .map(s => getAdjustedLength(s))
+        .filter(len => len > 0)
+        .sort((a, b) => b - a);
+
+    const top3Sebarau = sebarauSubmissions.slice(0, 3).reduce((a, b) => a + b, 0);
+    const top2Toman = tomanSubmissions.slice(0, 2).reduce((a, b) => a + b, 0);
+
+    return top3Sebarau + top2Toman;
 }
 
-const sebarauSubmissions = teamSubmissions
-    .filter(s => s.fish_type?.toLowerCase() === "sebarau")
-    .filter(s => !isExcluded(s, top3SebarauGlobal))
-    .map(s => getAdjustedLength(s))
-    .filter(len => len > 0)
-    .sort((a, b) => b - a);
+function calculateKingImctBreakdown(teamId) {
+    const videoBonusEnabled = document.getElementById('videoBonusToggle')?.checked ?? false;
 
-const tomanSubmissions = teamSubmissions
-    .filter(s => s.fish_type?.toLowerCase() === "toman")
-    .filter(s => !isExcluded(s, top3TomanGlobal))
-    .map(s => getAdjustedLength(s))
-    .filter(len => len > 0)
-    .sort((a, b) => b - a);
+    const teamInfo = teamsData[teamId] || {};
+    const teamCategory = (teamInfo.category || teamInfo.category_name || teamInfo.type || '')
+        .toString().toLowerCase().trim();
 
-return {
-    top3SebarauTotal: sebarauSubmissions.slice(0, 3).reduce((a, b) => a + b, 0),
-    top2TomanTotal: tomanSubmissions.slice(0, 2).reduce((a, b) => a + b, 0)
-};
+    const teamSubmissions = allSubmissions.filter(sub => {
+        const player = playersData[sub.player_tag] || {};
+        const tId = player.team_id || player.teamid;
+        return tId == teamId;
+    });
 
-            // Get all submissions for this team (not filtered by fish type)
-            const teamSubmissions = allSubmissions.filter(submission => {
-                const player = playersData[submission.player_tag] || {};
-                const playerTeamId = player.team_id || player.teamid;
-                return playerTeamId == teamId;
-            });
+    function getSubmissionCategory(sub) {
+        const player = playersData[sub.player_tag] || {};
+        const tId = player.team_id || player.teamid;
+        const tInfo = teamsData[tId] || {};
+        return (tInfo.category || tInfo.category_name || tInfo.type || '')
+            .toString().toLowerCase().trim();
+    }
 
-            // Helper function to check if a submission matches the longest fish of its type
-            function isLongestSebarau(submission) {
-                if (!longestSebarau) return false;
-                const sub = longestSebarau.submission;
-                const subLength = getAdjustedLength(submission);
-                return subLength === longestSebarau.length &&
-                       submission.player_tag === sub.player_tag &&
-                       (submission.fish_lenght || submission.fish_length) === (sub.fish_lenght || sub.fish_length);
-            }
-
-            function isLongestToman(submission) {
-                if (!longestToman) return false;
-                const sub = longestToman.submission;
-                const subLength = getAdjustedLength(submission);
-                return subLength === longestToman.length &&
-                       submission.player_tag === sub.player_tag &&
-                       (submission.fish_lenght || submission.fish_length) === (sub.fish_lenght || sub.fish_length);
-            }
-
-            // Get Sebarau submissions, excluding the longest Sebarau
-            const sebarauSubmissions = teamSubmissions
-                .filter(s => {
-                    // First check if it's a Sebarau
-                    if (!s.fish_type || s.fish_type.toLowerCase() !== 'sebarau') {
-                        return false;
-                    }
-                    // Exclude if it's the longest Sebarau
-                    return !isLongestSebarau(s);
-                })
-                .map(s => getAdjustedLength(s))
-                .filter(length => length > 0)
-                .sort((a, b) => b - a);
-
-            // Get Toman submissions, excluding the longest Toman
-            const tomanSubmissions = teamSubmissions
-                .filter(s => {
-                    // First check if it's a Toman
-                    if (!s.fish_type || s.fish_type.toLowerCase() !== 'toman') {
-                        return false;
-                    }
-                    // Exclude if it's the longest Toman
-                    return !isLongestToman(s);
-                })
-                .map(s => getAdjustedLength(s))
-                .filter(length => length > 0)
-                .sort((a, b) => b - a);
-
-            // Calculate totals separately
-            const top3SebarauTotal = sebarauSubmissions.slice(0, 3).reduce((sum, length) => sum + length, 0);
-            const top2TomanTotal = tomanSubmissions.slice(0, 2).reduce((sum, length) => sum + length, 0);
-
-            return {
-                top3SebarauTotal: top3SebarauTotal,
-                top2TomanTotal: top2TomanTotal
-            };
+    function getAdjustedLength(sub) {
+        let len = parseFloat(sub.fish_lenght || sub.fish_length) || 0;
+        if (videoBonusEnabled) {
+            const hasVid = (sub.release_video || '').trim() !== '';
+            if (hasVid) len += 10;
         }
+        return len;
+    }
+
+    function getTopNGlobal(fishType, N) {
+        return allSubmissions
+            .filter(s => s.fish_type?.toLowerCase() === fishType && getSubmissionCategory(s) === teamCategory)
+            .map(s => ({ submission: s, length: getAdjustedLength(s) }))
+            .filter(x => x.length > 0)
+            .sort((a, b) => b.length - a.length)
+            .slice(0, N)
+            .map(x => x.submission);
+    }
+
+    const top3SebarauGlobal = getTopNGlobal("sebarau", 3);
+    const top3TomanGlobal = getTopNGlobal("toman", 3);
+
+    function isExcluded(sub, list) {
+        return list.some(ex =>
+            ex.player_tag === sub.player_tag &&
+            (ex.fish_lenght || ex.fish_length) === (sub.fish_lenght || sub.fish_length)
+        );
+    }
+
+    const sebarauSubmissions = teamSubmissions
+        .filter(s => s.fish_type?.toLowerCase() === "sebarau")
+        .filter(s => !isExcluded(s, top3SebarauGlobal))
+        .map(s => getAdjustedLength(s))
+        .filter(len => len > 0)
+        .sort((a, b) => b - a);
+
+    const tomanSubmissions = teamSubmissions
+        .filter(s => s.fish_type?.toLowerCase() === "toman")
+        .filter(s => !isExcluded(s, top3TomanGlobal))
+        .map(s => getAdjustedLength(s))
+        .filter(len => len > 0)
+        .sort((a, b) => b - a);
+
+    return {
+        top3SebarauTotal: sebarauSubmissions.slice(0, 3).reduce((a, b) => a + b, 0),
+        top2TomanTotal: tomanSubmissions.slice(0, 2).reduce((a, b) => a + b, 0)
+    };
+}
+
 
         function populateCategoryFilter() {
             const categoryAwardFilter = document.getElementById('categoryAwardFilter');
