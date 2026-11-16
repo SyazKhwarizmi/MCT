@@ -3,7 +3,8 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FTMS Dashboard - Google Sheets</title>
+    <title>IMCT26-Sentak</title>
+    <link rel="icon" type="image/png" href="logo.png">
     <style>
         * {
             margin: 0;
@@ -13,17 +14,20 @@
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background:
+                radial-gradient(ellipse at top, #1a568f 0%, #0c326c 46%, #071833 100%);
             min-height: 100vh;
             padding: 20px;
+            color: #1c2740;
         }
 
         .container {
             max-width: 1600px;
             margin: 0 auto;
-            background: white;
-            border-radius: 15px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            background: #fffaf2;
+            border-radius: 18px;
+            border: 3px solid #d4b06a;
+            box-shadow: 0 18px 46px rgba(0, 0, 0, 0.35), inset 0 0 0 1px #f3e2b8;
             padding: 30px;
         }
 
@@ -31,18 +35,78 @@
             text-align: center;
             margin-bottom: 30px;
             padding-bottom: 20px;
-            border-bottom: 2px solid #f0f0f0;
+            border-bottom: 2px solid #ead7a8;
+        }
+
+        .crest {
+            max-width: 560px;
+            margin: 0 auto 18px;
+            padding: 22px 26px 16px;
+            border-radius: 26px;
+            border: 4px solid #d4b06a;
+            background:
+                radial-gradient(circle at 50% 0%, #1f62b0 0%, #0e3878 52%, #081e4a 100%);
+            box-shadow: inset 0 0 0 2px #8d6a2e, 0 12px 28px rgba(8, 24, 56, 0.28);
+        }
+
+        .crest-kicker {
+            color: #f3d48a;
+            letter-spacing: 0.46em;
+            text-transform: uppercase;
+            font-size: 0.72em;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .crest h1 {
+            font-family: Georgia, 'Palatino Linotype', Palatino, serif;
+            color: #f8e7c0;
+            font-size: 4.4em;
+            line-height: 0.85;
+            letter-spacing: 0.08em;
+            margin: 0 0 8px;
+            text-shadow: 0 3px 0 #7a1c2c;
+        }
+
+        .crest-title {
+            color: #fff6df;
+            letter-spacing: 0.16em;
+            text-transform: uppercase;
+            font-weight: 800;
+            font-size: 0.92em;
+        }
+
+        .crest-place {
+            margin-top: 6px;
+            color: #d5e6f6;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            font-size: 0.72em;
+        }
+
+        .crest-dates {
+            display: inline-block;
+            margin-top: 12px;
+            background: linear-gradient(180deg, #c4313f 0%, #8e1828 100%);
+            color: #f8e3a4;
+            border: 1px solid #e6c57a;
+            border-radius: 6px;
+            padding: 6px 16px;
+            letter-spacing: 0.08em;
+            font-weight: 800;
+            font-size: 0.92em;
         }
 
         h1 {
-            color: #333;
+            color: #0d2f66;
             margin-bottom: 10px;
             font-size: 2.5em;
         }
 
         .subtitle {
-            color: #666;
-            font-size: 1.1em;
+            color: #6d5840;
+            font-size: 1.05em;
+            margin-top: 14px;
         }
 
         .config-section {
@@ -53,7 +117,7 @@
         }
 
         .config-toggle {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(160deg, #14386e 0%, #0b2348 100%);
             color: white;
             padding: 12px 20px;
             border: none;
@@ -83,7 +147,7 @@
             padding: 15px;
             border-radius: 8px;
             margin-bottom: 15px;
-            border-left: 4px solid #667eea;
+            border-left: 4px solid #d4b06a;
         }
 
         .sheet-config h3 {
@@ -115,11 +179,11 @@
 
         input:focus, select:focus {
             outline: none;
-            border-color: #667eea;
+            border-color: #b8892e;
         }
 
         .btn {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(160deg, #14386e 0%, #0b2348 100%);
             color: white;
             padding: 12px 30px;
             border: none;
@@ -133,7 +197,7 @@
 
         .btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+            box-shadow: 0 5px 15px rgba(20, 56, 110, 0.35);
         }
 
         .info-box {
@@ -149,7 +213,7 @@
         .loading {
             text-align: center;
             padding: 20px;
-            color: #667eea;
+            color: #0d2f66;
             font-weight: 600;
         }
 
@@ -170,7 +234,7 @@
         }
 
         .stat-card {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(160deg, #14386e 0%, #0b2348 100%);
             color: white;
             padding: 20px;
             border-radius: 10px;
@@ -241,8 +305,8 @@
         }
 
         th {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
+            background: linear-gradient(160deg, #14386e 0%, #0b2348 100%);
+            color: #f6e7c1;
             padding: 12px;
             text-align: left;
             font-weight: 600;
@@ -293,7 +357,7 @@
             width: 300px;
             min-width: 250px;
             background: white;
-            border: 2px solid #667eea;
+            border: 2px solid #d4b06a;
             border-radius: 8px;
             box-shadow: 0 4px 12px rgba(0,0,0,0.15);
             z-index: 1000;
@@ -406,13 +470,13 @@
         }
 
         .filter-btn-apply {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(160deg, #14386e 0%, #0b2348 100%);
             color: white;
         }
 
         .filter-btn-apply:hover {
             transform: translateY(-1px);
-            box-shadow: 0 2px 5px rgba(102, 126, 234, 0.3);
+            box-shadow: 0 2px 5px rgba(20, 56, 110, 0.3);
         }
 
         .filter-btn-clear {
@@ -444,7 +508,7 @@
         }
 
         .link-cell {
-            color: #667eea;
+            color: #0d2f66;
             text-decoration: none;
             word-break: break-all;
         }
@@ -493,12 +557,15 @@
         }
 
         .refresh-btn {
-            background: #4caf50;
+            background: linear-gradient(160deg, #e0b85a 0%, #b8892e 100%);
+            color: #1c1408;
+            border: 1px solid #8d6a2e;
             margin-top: 10px;
         }
 
         .refresh-btn:hover {
-            background: #45a049;
+            background: linear-gradient(160deg, #f0cb78 0%, #c4963a 100%);
+            box-shadow: 0 5px 15px rgba(184, 137, 46, 0.4);
         }
 
         .nav-buttons {
@@ -509,11 +576,11 @@
         }
 
         .nav-btn {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
+            background: linear-gradient(160deg, #14386e 0%, #0c244c 100%);
+            color: #f8e7c2;
             padding: 10px 20px;
-            border: none;
-            border-radius: 8px;
+            border: 1px solid #d4b06a;
+            border-radius: 999px;
             text-decoration: none;
             font-weight: 600;
             transition: transform 0.2s;
@@ -525,7 +592,202 @@
         }
 
         .nav-btn.active {
-            background: linear-gradient(135deg, #4caf50 0%, #45a049 100%);
+            background: linear-gradient(180deg, #c4313f 0%, #8e1828 100%);
+            border-color: #f0d48a;
+            color: #fff6df;
+        }
+
+        .dash-section {
+            background: #fffdf8;
+            border: 1px solid #ead7a8;
+            border-radius: 14px;
+            padding: 22px;
+            margin-bottom: 22px;
+        }
+
+        .dash-section h2 {
+            color: #0d2f66;
+            font-family: Georgia, 'Palatino Linotype', Palatino, serif;
+            font-size: 1.55em;
+            margin-bottom: 6px;
+        }
+
+        .dash-note {
+            color: #666;
+            font-size: 0.92em;
+            line-height: 1.5;
+            margin-bottom: 18px;
+        }
+
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+            gap: 14px;
+            margin-bottom: 22px;
+        }
+
+        .kpi-card {
+            border-radius: 12px;
+            padding: 16px 18px;
+            color: white;
+            min-height: 108px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .kpi-card.total { background: linear-gradient(160deg, #14386e 0%, #0a2456 100%); }
+        .kpi-card.qualified { background: linear-gradient(160deg, #0e7c86 0%, #0a5560 100%); }
+        .kpi-card.unqualified { background: linear-gradient(160deg, #b4233a 0%, #7d1426 100%); }
+        .kpi-card.longest { background: linear-gradient(160deg, #c4963a 0%, #8a6220 100%); }
+        .kpi-card.shortest { background: linear-gradient(160deg, #5c4630 0%, #3a2a1c 100%); }
+        .kpi-card.neutral { background: linear-gradient(160deg, #1a4f8c 0%, #0e3268 100%); }
+
+        .kpi-label {
+            font-size: 0.82em;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            opacity: 0.9;
+            margin-bottom: 6px;
+        }
+
+        .kpi-value {
+            font-size: 1.8em;
+            font-weight: 700;
+            line-height: 1.1;
+        }
+
+        .kpi-meta {
+            margin-top: 6px;
+            font-size: 0.88em;
+            opacity: 0.95;
+            line-height: 1.35;
+        }
+
+        .panel-title {
+            font-size: 1.05em;
+            font-weight: 700;
+            color: #0d2f66;
+            margin: 8px 0 12px;
+        }
+
+        .bar-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .bar-row {
+            display: grid;
+            grid-template-columns: 120px 1fr auto;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .bar-name {
+            font-weight: 600;
+            color: #333;
+            font-size: 0.95em;
+        }
+
+        .bar-track {
+            background: #efe4cc;
+            border-radius: 999px;
+            height: 14px;
+            overflow: hidden;
+        }
+
+        .bar-fill {
+            height: 100%;
+            border-radius: 999px;
+            min-width: 4px;
+        }
+
+        .bar-count {
+            font-weight: 700;
+            color: #333;
+            min-width: 36px;
+            text-align: right;
+        }
+
+        .table-scroll {
+            overflow-x: auto;
+            border-radius: 10px;
+        }
+
+        .analysis-table {
+            width: 100%;
+            min-width: 640px;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-top: 0;
+        }
+
+        .analysis-table th {
+            font-size: 0.82em;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+            white-space: nowrap;
+        }
+
+        .analysis-table td {
+            background: white;
+        }
+
+        .share-cell {
+            min-width: 140px;
+        }
+
+        .share-track {
+            background: #efe4cc;
+            border-radius: 999px;
+            height: 8px;
+            margin-top: 6px;
+            overflow: hidden;
+        }
+
+        .share-fill {
+            height: 100%;
+            background: linear-gradient(160deg, #d4b06a 0%, #8a6220 100%);
+            border-radius: 999px;
+        }
+
+        .empty-analysis {
+            background: white;
+            border-radius: 10px;
+            padding: 24px;
+            color: #777;
+            text-align: center;
+        }
+
+        .raw-data {
+            margin-top: 8px;
+            background: #fffdf8;
+            border: 1px solid #ead7a8;
+            border-radius: 14px;
+            padding: 14px 18px 18px;
+        }
+
+        .raw-data summary {
+            cursor: pointer;
+            font-weight: 700;
+            color: #0d2f66;
+            font-size: 1.05em;
+        }
+
+        .raw-data[open] summary {
+            margin-bottom: 12px;
+        }
+
+        @media (max-width: 700px) {
+            .bar-row {
+                grid-template-columns: 1fr auto;
+            }
+
+            .bar-name {
+                grid-column: 1 / -1;
+            }
         }
     </style>
     </head>
@@ -534,8 +796,14 @@
     <script src="config.js" onerror="console.log('config.js not found, using localStorage instead')"></script>
     <div class="container">
         <div class="header">
-            <h1>🏆 FTMS Dashboard</h1>
-            <p class="subtitle">Tournament Management System - Google Sheets Integration</p>
+            <div class="crest">
+                <p class="crest-kicker">International</p>
+                <h1>MCT</h1>
+                <p class="crest-title">Monsoon Casting Tournament</p>
+                <p class="crest-place">Kenyir Lake, Terengganu · Malaysia</p>
+                <p class="crest-dates">11th – 14th Dec 2026</p>
+            </div>
+            <p class="subtitle">Catch analysis and registration overview</p>
             <div class="nav-buttons">
                 <a href="index.html" class="nav-btn active">📊 Dashboard</a>
                 <a href="leaderboard.html" class="nav-btn">🐟 Submissions</a>
@@ -555,8 +823,11 @@
         <div id="error" class="error" style="display: none;"></div>
 
         <div id="dashboard" style="display: none;">
-            <div class="dashboard-stats" id="dashboardStats"></div>
-            <div class="sheets-container" id="sheetsContainer"></div>
+            <div id="analysisDashboard"></div>
+            <details class="raw-data">
+                <summary>View sheet records</summary>
+                <div class="sheets-container" id="sheetsContainer"></div>
+            </details>
         </div>
     </div>
 
@@ -678,47 +949,291 @@
             return data.values;
         }
 
-        function displayDashboard(loadedSheets) {
-            const container = document.getElementById('sheetsContainer');
-            const statsDiv = document.getElementById('dashboardStats');
-            
-            container.innerHTML = '';
-            
-            // Calculate overall statistics
-            let totalRows = 0;
-            let totalSheets = Object.keys(loadedSheets).length;
-            
-            Object.values(loadedSheets).forEach(sheet => {
-                totalRows += sheet.length - 1; // Subtract header row
+        const QUALIFIED_FISH_TYPES = ['sebarau', 'toman'];
+        const FISH_COLORS = {
+            sebarau: '#c23b3b',
+            toman: '#0e7c86',
+            haruan: '#c4963a',
+            baung: '#8a4b2a',
+            others: '#6d7c8a'
+        };
+
+        function escapeHtml(value) {
+            return String(value ?? '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;');
+        }
+
+        function sheetToObjects(sheet) {
+            if (!sheet || sheet.length < 2) return [];
+            const headers = sheet[0].map(header => String(header || '').toLowerCase().trim().replace(/\s+/g, '_'));
+            return sheet.slice(1).map(row => {
+                const entry = {};
+                headers.forEach((header, index) => {
+                    if (!header) return;
+                    entry[header] = row[index] || '';
+                });
+                return entry;
+            }).filter(entry => Object.values(entry).some(value => String(value).trim() !== ''));
+        }
+
+        function fieldValue(entry, names) {
+            for (const name of names) {
+                if (entry[name] !== undefined && String(entry[name]).trim() !== '') {
+                    return String(entry[name]).trim();
+                }
+            }
+            return '';
+        }
+
+        function fishLength(entry) {
+            const raw = fieldValue(entry, ['fish_lenght', 'fish_length', 'length']);
+            const length = parseFloat(raw);
+            return Number.isFinite(length) ? length : null;
+        }
+
+        function formatCm(length) {
+            if (length === null || length === undefined || Number.isNaN(length)) return '—';
+            return `${Number(length).toFixed(1)} cm`;
+        }
+
+        function fishColor(type) {
+            return FISH_COLORS[String(type || '').toLowerCase()] || '#14386e';
+        }
+
+        function buildAnalysisHtml(loadedSheets) {
+            const submissions = sheetToObjects(loadedSheets.submission_dev);
+            const players = sheetToObjects(loadedSheets.Players);
+            const teams = sheetToObjects(loadedSheets.Team);
+
+            const playersByTag = {};
+            players.forEach(player => {
+                const tag = fieldValue(player, ['player_tag', 'tag']);
+                if (tag) playersByTag[tag] = player;
             });
 
-            // Display overall stats
-            statsDiv.innerHTML = `
-                <div class="stat-card">
-                    <div class="stat-value">${totalSheets}</div>
-                    <div class="stat-label">Active Sheets</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value">${totalRows}</div>
-                    <div class="stat-label">Total Records</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value">${loadedSheets.Players ? loadedSheets.Players.length - 1 : 0}</div>
-                    <div class="stat-label">Players</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value">${loadedSheets.Team ? loadedSheets.Team.length - 1 : 0}</div>
-                    <div class="stat-label">Teams</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value">${loadedSheets.Boat ? loadedSheets.Boat.length - 1 : 0}</div>
-                    <div class="stat-label">Boats</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value">${loadedSheets.submission_dev ? loadedSheets.submission_dev.length - 1 : 0}</div>
-                    <div class="stat-label">Submissions</div>
-                </div>
+            const teamsById = {};
+            teams.forEach(team => {
+                const teamId = fieldValue(team, ['teamid', 'team_id', 'id']);
+                if (teamId) teamsById[teamId] = team;
+            });
+
+            const byType = {};
+            let qualified = 0;
+            let notQualified = 0;
+            let longest = null;
+            let shortest = null;
+
+            submissions.forEach(submission => {
+                const type = fieldValue(submission, ['fish_type']) || 'Unknown';
+                const length = fishLength(submission);
+                const isQualified = QUALIFIED_FISH_TYPES.includes(type.toLowerCase());
+                if (isQualified) qualified += 1;
+                else notQualified += 1;
+
+                if (!byType[type]) {
+                    byType[type] = { type, count: 0, lengths: [] };
+                }
+                byType[type].count += 1;
+                if (length !== null && length > 0) {
+                    byType[type].lengths.push(length);
+                    const tag = fieldValue(submission, ['player_tag', 'tag']);
+                    const player = playersByTag[tag] || {};
+                    const name = fieldValue(player, ['player_name', 'name']) || (tag ? `Tag ${tag}` : 'Unknown');
+                    const record = { type, length, name };
+                    if (!longest || length > longest.length) longest = record;
+                    if (!shortest || length < shortest.length) shortest = record;
+                }
+            });
+
+            const typeRows = Object.values(byType).sort((a, b) => b.count - a.count || a.type.localeCompare(b.type));
+            const totalCatch = submissions.length;
+            const maxTypeCount = typeRows.reduce((max, row) => Math.max(max, row.count), 1);
+
+            const catchBars = typeRows.length
+                ? typeRows.map(row => `
+                    <div class="bar-row">
+                        <div class="bar-name">${escapeHtml(row.type)}</div>
+                        <div class="bar-track">
+                            <div class="bar-fill" style="width:${(row.count / maxTypeCount) * 100}%; background:${fishColor(row.type)};"></div>
+                        </div>
+                        <div class="bar-count">${row.count}</div>
+                    </div>
+                `).join('')
+                : '<div class="empty-analysis">No catch submissions found.</div>';
+
+            const catchTable = typeRows.length
+                ? `<div class="table-scroll"><table class="analysis-table">
+                    <thead>
+                        <tr>
+                            <th>Fish type</th>
+                            <th>Count</th>
+                            <th>Share</th>
+                            <th>Average length</th>
+                            <th>Longest</th>
+                            <th>Shortest</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${typeRows.map(row => {
+                            const average = row.lengths.length
+                                ? row.lengths.reduce((sum, value) => sum + value, 0) / row.lengths.length
+                                : null;
+                            const share = totalCatch ? (row.count / totalCatch) * 100 : 0;
+                            return `<tr>
+                                <td>${escapeHtml(row.type)}</td>
+                                <td>${row.count}</td>
+                                <td>${share.toFixed(1)}%</td>
+                                <td>${formatCm(average)}</td>
+                                <td>${formatCm(row.lengths.length ? Math.max(...row.lengths) : null)}</td>
+                                <td>${formatCm(row.lengths.length ? Math.min(...row.lengths) : null)}</td>
+                            </tr>`;
+                        }).join('')}
+                    </tbody>
+                </table></div>`
+                : '';
+
+            const categories = {};
+            teams.forEach(team => {
+                const teamId = fieldValue(team, ['teamid', 'team_id', 'id']);
+                const teamName = fieldValue(team, ['team_name', 'teamname', 'name']);
+                if (!teamId && !teamName) return;
+                const category = fieldValue(team, ['category', 'category_name']) || 'Uncategorized';
+                if (!categories[category]) {
+                    categories[category] = { category, teams: 0, participants: 0, local: 0, international: 0 };
+                }
+                categories[category].teams += 1;
+            });
+
+            let participantTotal = 0;
+            players.forEach(player => {
+                const tag = fieldValue(player, ['player_tag', 'tag']);
+                const name = fieldValue(player, ['player_name', 'name']);
+                if (!tag && !name) return;
+                participantTotal += 1;
+                const teamId = fieldValue(player, ['team_id', 'teamid']);
+                const team = teamsById[teamId] || {};
+                const category = fieldValue(team, ['category', 'category_name']) || 'Unassigned';
+                if (!categories[category]) {
+                    categories[category] = { category, teams: 0, participants: 0, local: 0, international: 0 };
+                }
+                categories[category].participants += 1;
+                const playerType = fieldValue(player, ['type', 'player_type']).toLowerCase();
+                if (playerType === 'local') categories[category].local += 1;
+                else if (playerType === 'international') categories[category].international += 1;
+            });
+
+            const categoryRows = Object.values(categories).sort((a, b) => b.participants - a.participants || a.category.localeCompare(b.category));
+            const teamTotal = teams.filter(team => fieldValue(team, ['teamid', 'team_id', 'id']) || fieldValue(team, ['team_name', 'teamname', 'name'])).length;
+            const maxParticipants = categoryRows.reduce((max, row) => Math.max(max, row.participants), 1);
+
+            const unspecified = categoryRows.reduce((sum, row) => sum + (row.participants - row.local - row.international), 0);
+            const registrationTable = categoryRows.length
+                ? `<div class="table-scroll"><table class="analysis-table">
+                    <thead>
+                        <tr>
+                            <th>Category</th>
+                            <th>Teams</th>
+                            <th>Participants</th>
+                            <th>Local</th>
+                            <th>International</th>
+                            <th>Share</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${categoryRows.map(row => {
+                            const share = participantTotal ? (row.participants / participantTotal) * 100 : 0;
+                            return `<tr>
+                                <td>${escapeHtml(row.category)}</td>
+                                <td>${row.teams}</td>
+                                <td>${row.participants}</td>
+                                <td>${row.local}</td>
+                                <td>${row.international}</td>
+                                <td class="share-cell">
+                                    ${share.toFixed(1)}%
+                                    <div class="share-track"><div class="share-fill" style="width:${(row.participants / maxParticipants) * 100}%;"></div></div>
+                                </td>
+                            </tr>`;
+                        }).join('')}
+                    </tbody>
+                </table></div>
+                ${unspecified ? `<p class="dash-note" style="margin-top:12px;margin-bottom:0;">${unspecified} participant${unspecified === 1 ? '' : 's'} have no player type recorded, so they are not included in the local or international columns.</p>` : ''}`
+                : '<div class="empty-analysis">No registration records found.</div>';
+
+            const longestMeta = longest
+                ? `${escapeHtml(longest.type)} · ${escapeHtml(longest.name)}`
+                : 'No measured fish';
+            const shortestMeta = shortest
+                ? `${escapeHtml(shortest.type)} · ${escapeHtml(shortest.name)}`
+                : 'No measured fish';
+
+            return `
+                <section class="dash-section">
+                    <h2>Catch analysis</h2>
+                    <p class="dash-note">Qualified catches are Sebarau and Toman, the species that count toward King of IMCT. Every other species is counted as not qualified.</p>
+                    <div class="kpi-grid">
+                        <div class="kpi-card total">
+                            <div class="kpi-label">Total catch</div>
+                            <div class="kpi-value">${totalCatch}</div>
+                            <div class="kpi-meta">${typeRows.length} fish type${typeRows.length === 1 ? '' : 's'}</div>
+                        </div>
+                        <div class="kpi-card qualified">
+                            <div class="kpi-label">Qualified</div>
+                            <div class="kpi-value">${qualified}</div>
+                            <div class="kpi-meta">Sebarau and Toman</div>
+                        </div>
+                        <div class="kpi-card unqualified">
+                            <div class="kpi-label">Not qualified</div>
+                            <div class="kpi-value">${notQualified}</div>
+                            <div class="kpi-meta">Other species</div>
+                        </div>
+                        <div class="kpi-card longest">
+                            <div class="kpi-label">Longest</div>
+                            <div class="kpi-value">${longest ? formatCm(longest.length) : '—'}</div>
+                            <div class="kpi-meta">${longestMeta}</div>
+                        </div>
+                        <div class="kpi-card shortest">
+                            <div class="kpi-label">Shortest</div>
+                            <div class="kpi-value">${shortest ? formatCm(shortest.length) : '—'}</div>
+                            <div class="kpi-meta">${shortestMeta}</div>
+                        </div>
+                    </div>
+                    <div class="panel-title">Fish count by type</div>
+                    <div class="bar-list">${catchBars}</div>
+                    <div class="panel-title">Average length by fish type</div>
+                    ${catchTable}
+                </section>
+                <section class="dash-section">
+                    <h2>Registration</h2>
+                    <p class="dash-note">Participants are grouped by their team category. Local and international counts come from the player type.</p>
+                    <div class="kpi-grid">
+                        <div class="kpi-card neutral">
+                            <div class="kpi-label">Participants</div>
+                            <div class="kpi-value">${participantTotal}</div>
+                            <div class="kpi-meta">${categoryRows.length} categor${categoryRows.length === 1 ? 'y' : 'ies'}</div>
+                        </div>
+                        <div class="kpi-card total">
+                            <div class="kpi-label">Teams</div>
+                            <div class="kpi-value">${teamTotal}</div>
+                            <div class="kpi-meta">All registered teams</div>
+                        </div>
+                    </div>
+                    <div class="panel-title">Participants and teams by category</div>
+                    ${registrationTable}
+                </section>
             `;
+        }
+
+        function displayDashboard(loadedSheets) {
+            const container = document.getElementById('sheetsContainer');
+            const analysisDiv = document.getElementById('analysisDashboard');
+
+            container.innerHTML = '';
+            if (analysisDiv) {
+                analysisDiv.innerHTML = buildAnalysisHtml(loadedSheets);
+            }
 
             // Create combined Players-Team-Boat table
             if (loadedSheets.Players && loadedSheets.Team && loadedSheets.Boat) {
@@ -1395,94 +1910,13 @@
                     const cellValue = row[index] || '';
                     const columnName = (headerText || '').toLowerCase();
                     
-                    // Check if it's a URL/link
-                    if (cellValue && (cellValue.startsWith('http://') || cellValue.startsWith('https://'))) {
-                        // Check if it's an image URL (by URL pattern or column name)
-                        if (isImageUrl(cellValue, columnName)) {
-                            const imgContainer = document.createElement('div');
-                            imgContainer.className = 'image-cell';
-                            
-                            const originalUrl = cellValue;
-                            
-                            // For Google Drive links, use iframe preview which is more reliable
-                            if (originalUrl.includes('drive.google.com')) {
-                                const fileId = extractGoogleDriveFileId(originalUrl);
-                                if (fileId) {
-                                    // Try to load as image first
-                                    const img = document.createElement('img');
-                                    const convertedUrl = `https://drive.google.com/uc?export=view&id=${fileId}`;
-                                    img.src = convertedUrl;
-                                    img.alt = 'Image';
-                                    img.loading = 'lazy';
-                                    
-                                    img.onload = function() {
-                                        img.style.cursor = 'pointer';
-                                        img.onclick = function() {
-                                            window.open(originalUrl, '_blank');
-                                        };
-                                    };
-                                    
-                                    img.onerror = function() {
-                                        img.style.display = 'none';
-                                        const iframe = document.createElement('iframe');
-                                        iframe.src = `https://drive.google.com/file/d/${fileId}/preview`;
-                                        iframe.style.width = '200px';
-                                        iframe.style.height = '200px';
-                                        iframe.style.border = 'none';
-                                        iframe.style.borderRadius = '5px';
-                                        iframe.style.cursor = 'pointer';
-                                        iframe.style.overflow = 'hidden';
-                                        iframe.onclick = function() {
-                                            window.open(originalUrl, '_blank');
-                                        };
-                                        imgContainer.appendChild(iframe);
-                                    };
-                                    
-                                    imgContainer.appendChild(img);
-                                } else {
-                                    const link = document.createElement('a');
-                                    link.href = originalUrl;
-                                    link.target = '_blank';
-                                    link.className = 'link-cell';
-                                    link.textContent = '📷 View Image';
-                                    imgContainer.appendChild(link);
-                                }
-                            } else {
-                                const img = document.createElement('img');
-                                img.src = convertToImageUrl(originalUrl);
-                                img.alt = 'Image';
-                                img.loading = 'lazy';
-                                
-                                img.onload = function() {
-                                    img.style.cursor = 'pointer';
-                                    img.onclick = function() {
-                                        window.open(originalUrl, '_blank');
-                                    };
-                                };
-                                
-                                img.onerror = function() {
-                                    img.style.display = 'none';
-                                    const link = document.createElement('a');
-                                    link.href = originalUrl;
-                                    link.target = '_blank';
-                                    link.className = 'link-cell';
-                                    link.textContent = '📷 View Image';
-                                    imgContainer.appendChild(link);
-                                };
-                                
-                                imgContainer.appendChild(img);
-                            }
-                            
-                            td.appendChild(imgContainer);
-                        } else {
-                            // Regular URL - show as link
-                            const link = document.createElement('a');
-                            link.href = cellValue;
-                            link.target = '_blank';
-                            link.className = 'link-cell';
-                            link.textContent = cellValue.length > 50 ? cellValue.substring(0, 50) + '...' : cellValue;
-                            td.appendChild(link);
-                        }
+                    const isMedia = isImageUrl(cellValue, columnName) || isVideoUrl(cellValue, columnName);
+                    if (isMedia) {
+                        td.textContent = 'File on Google Drive';
+                        td.title = cellValue;
+                    } else if (cellValue && (cellValue.startsWith('http://') || cellValue.startsWith('https://'))) {
+                        td.textContent = cellValue.length > 50 ? cellValue.substring(0, 50) + '...' : cellValue;
+                        td.title = cellValue;
                     } else {
                         td.textContent = cellValue;
                     }
@@ -1535,6 +1969,16 @@
             }
             
             return false;
+        }
+
+        function isVideoUrl(url, columnName = '') {
+            if (!url) return false;
+            const videoKeywords = ['video', 'release_video', 'release video'];
+            if (columnName && videoKeywords.some(keyword => columnName.includes(keyword))) {
+                return true;
+            }
+            const lowerUrl = String(url).toLowerCase();
+            return ['.mp4', '.webm', '.mov', '.avi', 'youtube.com', 'youtu.be'].some(token => lowerUrl.includes(token));
         }
 
         // Extract Google Drive file ID from various URL formats
