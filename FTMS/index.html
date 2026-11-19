@@ -639,6 +639,10 @@
         .kpi-card.total { background: linear-gradient(160deg, #14386e 0%, #0a2456 100%); }
         .kpi-card.qualified { background: linear-gradient(160deg, #0e7c86 0%, #0a5560 100%); }
         .kpi-card.unqualified { background: linear-gradient(160deg, #b4233a 0%, #7d1426 100%); }
+        .kpi-card.valid { background: linear-gradient(160deg, #1b7a4a 0%, #0f5132 100%); }
+        .kpi-card.rejected { background: linear-gradient(160deg, #b4233a 0%, #7d1426 100%); }
+        .kpi-card.kiv { background: linear-gradient(160deg, #c4963a 0%, #8a6220 100%); }
+        .kpi-card.pending { background: linear-gradient(160deg, #5c4630 0%, #3a2a1c 100%); }
         .kpi-card.longest { background: linear-gradient(160deg, #c4963a 0%, #8a6220 100%); }
         .kpi-card.shortest { background: linear-gradient(160deg, #5c4630 0%, #3a2a1c 100%); }
         .kpi-card.neutral { background: linear-gradient(160deg, #1a4f8c 0%, #0e3268 100%); }
@@ -809,6 +813,7 @@
                 <a href="leaderboard.html" class="nav-btn">🐟 Submissions</a>
                 <a href="leaderboard-individual.html" class="nav-btn">👤 Individual</a>
                 <a href="leaderboard-team.html" class="nav-btn">🏅 Team</a>
+                <!-- <a href="validation.html" class="nav-btn">✅ Validation</a> -->
             </div>
             <button class="btn refresh-btn" id="refreshBtn" onclick="loadAllSheets()" style="display: none; max-width: 200px; margin: 20px auto 0;">
                 🔄 Refresh Data
@@ -1003,10 +1008,31 @@
             return FISH_COLORS[String(type || '').toLowerCase()] || '#14386e';
         }
 
+        function getValidationStatus(entry) {
+            return fieldValue(entry, ['validation', 'status']).toLowerCase();
+        }
+
+        function isValidSubmission(entry) {
+            return getValidationStatus(entry) === 'valid';
+        }
+
         function buildAnalysisHtml(loadedSheets) {
-            const submissions = sheetToObjects(loadedSheets.submission_dev);
+            const allSubmissions = sheetToObjects(loadedSheets.submission_dev);
+            const submissions = allSubmissions.filter(isValidSubmission);
             const players = sheetToObjects(loadedSheets.Players);
             const teams = sheetToObjects(loadedSheets.Team);
+
+            let validCount = 0;
+            let rejectedCount = 0;
+            let kivCount = 0;
+            let pendingCount = 0;
+            allSubmissions.forEach(submission => {
+                const status = getValidationStatus(submission);
+                if (status === 'Valid') validCount += 1;
+                else if (status === 'Reject' || status === 'rejected') rejectedCount += 1;
+                else if (status === 'Kiv') kivCount += 1;
+                else pendingCount += 1;
+            });
 
             const playersByTag = {};
             players.forEach(player => {
@@ -1172,22 +1198,42 @@
             return `
                 <section class="dash-section">
                     <h2>Catch analysis</h2>
-                    <p class="dash-note">Qualified catches are Sebarau and Toman, the species that count toward King of IMCT. Every other species is counted as not qualified.</p>
+                    <p class="dash-note">Only submissions marked Valid are included in the catch totals below. Reject and KIV are shown for review only. Qualified catches are Sebarau and Toman.</p>
                     <div class="kpi-grid">
                         <div class="kpi-card total">
-                            <div class="kpi-label">Total catch</div>
-                            <div class="kpi-value">${totalCatch}</div>
-                            <div class="kpi-meta">${typeRows.length} fish type${typeRows.length === 1 ? '' : 's'}</div>
+                            <div class="kpi-label">Submitted</div>
+                            <div class="kpi-value">${allSubmissions.length}</div>
+                            <div class="kpi-meta">All catch records</div>
+                        </div>
+                        <div class="kpi-card valid">
+                            <div class="kpi-label">Valid</div>
+                            <div class="kpi-value">${validCount}</div>
+                            <div class="kpi-meta">Counted in rankings</div>
+                        </div>
+                        <div class="kpi-card rejected">
+                            <div class="kpi-label">Rejected</div>
+                            <div class="kpi-value">${rejectedCount}</div>
+                            <div class="kpi-meta">Not counted</div>
+                        </div>
+                        <div class="kpi-card kiv">
+                            <div class="kpi-label">KIV</div>
+                            <div class="kpi-value">${kivCount}</div>
+                            <div class="kpi-meta">Still under review</div>
+                        </div>
+                        <div class="kpi-card pending">
+                            <div class="kpi-label">Pending</div>
+                            <div class="kpi-value">${pendingCount}</div>
+                            <div class="kpi-meta">No validation yet</div>
                         </div>
                         <div class="kpi-card qualified">
                             <div class="kpi-label">Qualified</div>
                             <div class="kpi-value">${qualified}</div>
-                            <div class="kpi-meta">Sebarau and Toman</div>
+                            <div class="kpi-meta">Valid Sebarau and Toman</div>
                         </div>
                         <div class="kpi-card unqualified">
                             <div class="kpi-label">Not qualified</div>
                             <div class="kpi-value">${notQualified}</div>
-                            <div class="kpi-meta">Other species</div>
+                            <div class="kpi-meta">Other valid species</div>
                         </div>
                         <div class="kpi-card longest">
                             <div class="kpi-label">Longest</div>

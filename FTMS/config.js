@@ -8,6 +8,8 @@ const CONFIG = {
     submissionSheet: 'submission',
     playersSheet: 'Players',
     teamSheet: 'Team',
-    boatSheet: 'Boat'
+    boatSheet: 'Boat',
+    // Paste the Apps Script web app URL after deploying ValidationAPI.gs
+    validationScriptUrl: ''
 };
 

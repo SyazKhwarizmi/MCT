@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Validation - International MCT</title>
+    <link rel="icon" type="image/png" href="logo.png">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: radial-gradient(ellipse at top, #1a568f 0%, #0c326c 46%, #071833 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #1c2740;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: #fffaf2;
+            border-radius: 18px;
+            border: 3px solid #d4b06a;
+            box-shadow: 0 18px 46px rgba(0, 0, 0, 0.35), inset 0 0 0 1px #f3e2b8;
+            padding: 30px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #ead7a8;
+        }
+
+        .crest {
+            max-width: 560px;
+            margin: 0 auto 18px;
+            padding: 22px 26px 16px;
+            border-radius: 26px;
+            border: 4px solid #d4b06a;
+            background: radial-gradient(circle at 50% 0%, #1f62b0 0%, #0e3878 52%, #081e4a 100%);
+            box-shadow: inset 0 0 0 2px #8d6a2e, 0 12px 28px rgba(8, 24, 56, 0.28);
+        }
+
+        .crest-kicker {
+            color: #f3d48a;
+            letter-spacing: 0.46em;
+            text-transform: uppercase;
+            font-size: 0.72em;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .crest h1 {
+            font-family: Georgia, 'Palatino Linotype', Palatino, serif;
+            color: #f8e7c0;
+            font-size: 4.4em;
+            line-height: 0.85;
+            letter-spacing: 0.08em;
+            margin: 0 0 8px;
+            text-shadow: 0 3px 0 #7a1c2c;
+        }
+
+        .crest-title {
+            color: #fff6df;
+            letter-spacing: 0.16em;
+            text-transform: uppercase;
+            font-weight: 800;
+            font-size: 0.92em;
+        }
+
+        .crest-place {
+            margin-top: 6px;
+            color: #d5e6f6;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            font-size: 0.72em;
+        }
+
+        .crest-dates {
+            display: inline-block;
+            margin-top: 12px;
+            background: linear-gradient(180deg, #c4313f 0%, #8e1828 100%);
+            color: #f8e3a4;
+            border: 1px solid #e6c57a;
+            border-radius: 6px;
+            padding: 6px 16px;
+            letter-spacing: 0.08em;
+            font-weight: 800;
+            font-size: 0.92em;
+        }
+
+        .page-title {
+            color: #0d2f66;
+            font-family: Georgia, 'Palatino Linotype', Palatino, serif;
+            font-size: 2em;
+            margin-top: 16px;
+        }
+
+        .subtitle {
+            color: #6d5840;
+            font-size: 1.05em;
+            margin-top: 6px;
+        }
+
+        .nav-buttons {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-top: 18px;
+        }
+
+        .nav-btn {
+            background: linear-gradient(160deg, #14386e 0%, #0c244c 100%);
+            color: #f8e7c2;
+            padding: 10px 20px;
+            border: 1px solid #d4b06a;
+            border-radius: 999px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: transform 0.2s;
+        }
+
+        .nav-btn:hover { transform: translateY(-2px); }
+
+        .nav-btn.active {
+            background: linear-gradient(180deg, #c4313f 0%, #8e1828 100%);
+            border-color: #f0d48a;
+            color: #fff6df;
+        }
+
+        .filter-section {
+            background: #fffdf8;
+            border: 1px solid #ead7a8;
+            padding: 20px;
+            border-radius: 14px;
+            margin-bottom: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .filter-group {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        label {
+            font-weight: 600;
+            color: #333;
+            font-size: 1.05em;
+        }
+
+        select, input[type="search"] {
+            flex: 1;
+            min-width: 200px;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            background: white;
+        }
+
+        select:focus, input[type="search"]:focus {
+            outline: none;
+            border-color: #b8892e;
+        }
+
+        .setup-box {
+            background: #fff4e0;
+            border: 1px solid #d4b06a;
+            border-radius: 12px;
+            padding: 16px 18px;
+            margin-bottom: 20px;
+            color: #5c4630;
+            line-height: 1.5;
+            font-size: 0.95em;
+        }
+
+        .setup-box strong { color: #0d2f66; }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #0d2f66;
+            font-weight: 600;
+            font-size: 1.2em;
+        }
+
+        .error {
+            background: #ffebee;
+            border-left: 4px solid #f44336;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            color: #c62828;
+        }
+
+        .success {
+            background: #e8f5e9;
+            border-left: 4px solid #2e7d32;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            color: #1b5e20;
+        }
+
+        .stats-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            background: linear-gradient(160deg, #14386e 0%, #0a2456 100%);
+            color: #f8e7c2;
+            border: 1px solid #d4b06a;
+            padding: 18px;
+            border-radius: 10px;
+            text-align: center;
+            cursor: pointer;
+        }
+
+        .stat-card.valid { background: linear-gradient(160deg, #1b7a4a 0%, #0f5132 100%); }
+        .stat-card.reject { background: linear-gradient(160deg, #b4233a 0%, #7d1426 100%); }
+        .stat-card.kiv { background: linear-gradient(160deg, #c4963a 0%, #8a6220 100%); }
+        .stat-card.pending { background: linear-gradient(160deg, #5c4630 0%, #3a2a1c 100%); }
+        .stat-card.active-filter { outline: 3px solid #d4b06a; }
+
+        .stat-value { font-size: 28px; font-weight: bold; margin-bottom: 4px; }
+        .stat-label { font-size: 13px; opacity: 0.9; text-transform: uppercase; letter-spacing: 0.04em; }
+
+        .list {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .card {
+            background: #fffdf8;
+            border: 1px solid #ead7a8;
+            border-radius: 14px;
+            padding: 18px;
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 16px;
+            align-items: start;
+        }
+
+        .player-name {
+            font-family: Georgia, 'Palatino Linotype', Palatino, serif;
+            font-size: 1.35em;
+            font-weight: bold;
+            color: #0d2f66;
+        }
+
+        .meta {
+            color: #6d5840;
+            margin-top: 4px;
+            font-size: 0.95em;
+        }
+
+        .details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .detail {
+            background: rgba(255,255,255,0.7);
+            border-radius: 8px;
+            padding: 10px;
+        }
+
+        .detail-label {
+            font-size: 0.78em;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            color: #666;
+            margin-bottom: 4px;
+        }
+
+        .detail-value {
+            font-weight: 700;
+            color: #0d2f66;
+        }
+
+        .detail-value.length { color: #8a6220; font-size: 1.2em; }
+
+        .actions {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            min-width: 140px;
+        }
+
+        .action-btn {
+            border: 1px solid #d4b06a;
+            border-radius: 8px;
+            padding: 10px 14px;
+            font-weight: 700;
+            cursor: pointer;
+            color: #fff6df;
+        }
+
+        .action-btn:disabled {
+            opacity: 0.55;
+            cursor: wait;
+        }
+
+        .action-btn.valid { background: linear-gradient(160deg, #1b7a4a 0%, #0f5132 100%); }
+        .action-btn.reject { background: linear-gradient(160deg, #b4233a 0%, #7d1426 100%); }
+        .action-btn.kiv { background: linear-gradient(160deg, #c4963a 0%, #8a6220 100%); }
+        .action-btn.clear {
+            background: #efe4cc;
+            color: #3a2a1c;
+        }
+
+        .badge {
+            display: inline-block;
+            margin-top: 8px;
+            padding: 4px 10px;
+            border-radius: 999px;
+            font-size: 0.8em;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+
+        .badge.valid { background: #d9f2e4; color: #0f5132; }
+        .badge.reject { background: #fde2e2; color: #7d1426; }
+        .badge.kiv { background: #f7e7c6; color: #8a6220; }
+        .badge.pending { background: #ece7df; color: #5c4630; }
+
+        .empty-state {
+            text-align: center;
+            padding: 50px 20px;
+            color: #777;
+        }
+
+        .media-links {
+            margin-top: 10px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .media-links a {
+            color: #0d2f66;
+            font-size: 0.9em;
+            font-weight: 600;
+        }
+
+        @media (max-width: 720px) {
+            .container { padding: 16px; }
+            .crest h1 { font-size: 3.2em; }
+            .card { grid-template-columns: 1fr; }
+            .actions { flex-direction: row; flex-wrap: wrap; }
+        }
+    </style>
+</head>
+<body>
+    <script src="config.js" onerror="console.log('config.js not found, using localStorage instead')"></script>
+    <div class="container">
+        <div class="header">
+            <div class="crest">
+                <p class="crest-kicker">International</p>
+                <h1>MCT</h1>
+                <p class="crest-title">Monsoon Casting Tournament</p>
+                <p class="crest-place">Kenyir Lake, Terengganu · Malaysia</p>
+                <p class="crest-dates">11th – 14th Dec 2026</p>
+            </div>
+            <h2 class="page-title">Submission Validation</h2>
+            <p class="subtitle">Mark catches as Valid, Reject, or KIV</p>
+            <div class="nav-buttons">
+                <a href="index.html" class="nav-btn">📊 Dashboard</a>
+                <a href="leaderboard.html" class="nav-btn">🐟 Submissions</a>
+                <a href="leaderboard-individual.html" class="nav-btn">👤 Individual</a>
+                <a href="leaderboard-team.html" class="nav-btn">🏅 Team</a>
+                <a href="validation.html" class="nav-btn active">✅ Validation</a>
+            </div>
+        </div>
+
+        <div id="setupBox" class="setup-box" style="display: none;"></div>
+        <div id="message" style="display: none;"></div>
+
+        <div class="filter-section">
+            <div class="filter-group">
+                <label for="statusFilter">Status:</label>
+                <select id="statusFilter">
+                    <option value="pending">Pending</option>
+                    <option value="kiv">KIV</option>
+                    <option value="valid">Valid</option>
+                    <option value="reject">Rejected</option>
+                    <option value="all">All</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label for="searchInput">Search:</label>
+                <input type="search" id="searchInput" placeholder="Player name, tag, fish type, team...">
+            </div>
+        </div>
+
+        <div id="loading" class="loading">Loading submissions...</div>
+        <div id="error" class="error" style="display: none;"></div>
+
+        <div id="content" style="display: none;">
+            <div class="stats-summary" id="statsSummary"></div>
+            <div class="list" id="submissionList"></div>
+        </div>
+    </div>
+
+    <script>
+        function getConfig(key) {
+            if (typeof CONFIG !== 'undefined' && CONFIG[key]) return CONFIG[key];
+            return localStorage.getItem(key) || '';
+        }
+
+        let rawRows = [];
+        let playersData = {};
+        let teamsData = {};
+
+        window.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('statusFilter').addEventListener('change', renderList);
+            document.getElementById('searchInput').addEventListener('input', renderList);
+            setTimeout(loadData, 100);
+            showSetupHelp();
+        });
+
+        function showSetupHelp() {
+            const box = document.getElementById('setupBox');
+            const scriptUrl = getConfig('validationScriptUrl');
+            if (!scriptUrl || scriptUrl.includes('YOUR_')) {
+                box.style.display = 'block';
+                box.innerHTML = `
+                    <strong>One-time setup needed to save validation status</strong><br>
+                    1. Open your Google Sheet → Extensions → Apps Script<br>
+                    2. Paste the code from <code>ValidationAPI.gs</code> and save<br>
+                    3. Deploy → New deployment → Web app → Execute as Me → Anyone<br>
+                    4. Copy the web app URL into <code>config.js</code> as <code>validationScriptUrl</code>
+                `;
+            }
+        }
+
+        async function loadData() {
+            const loadingDiv = document.getElementById('loading');
+            const errorDiv = document.getElementById('error');
+            const contentDiv = document.getElementById('content');
+
+            loadingDiv.style.display = 'block';
+            errorDiv.style.display = 'none';
+            contentDiv.style.display = 'none';
+
+            try {
+                const apiKey = getConfig('apiKey');
+                const sheetId = getConfig('sheetId');
+                const submissionSheet = getConfig('submissionSheet') || 'submission';
+                const playersSheet = getConfig('playersSheet') || 'Players';
+                const teamSheet = getConfig('teamSheet') || 'Team';
+
+                if (!apiKey || !sheetId) {
+                    throw new Error('API Key or Sheet ID is missing in config.js');
+                }
+
+                const [submissions, players, teams] = await Promise.all([
+                    loadSheetData(sheetId, submissionSheet, apiKey),
+                    loadSheetData(sheetId, playersSheet, apiKey),
+                    loadSheetData(sheetId, teamSheet, apiKey)
+                ]);
+
+                playersData = processPlayers(players);
+                teamsData = processTeams(teams);
+                rawRows = processSubmissions(submissions);
+
+                loadingDiv.style.display = 'none';
+                contentDiv.style.display = 'block';
+                renderList();
+            } catch (error) {
+                loadingDiv.style.display = 'none';
+                errorDiv.style.display = 'block';
+                errorDiv.textContent = 'Error loading data: ' + error.message;
+                console.error(error);
+            }
+        }
+
+        async function loadSheetData(sheetId, sheetName, apiKey) {
+            const range = `${sheetName}!A1:Z2000`;
+            const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${encodeURIComponent(range)}?key=${apiKey}`;
+            const response = await fetch(url);
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.error?.message || `API Error: ${response.status}`);
+            }
+            const data = await response.json();
+            if (!data.values || data.values.length === 0) throw new Error('No data found');
+            return data.values;
+        }
+
+        function processPlayers(data) {
+            if (!data || data.length < 2) return {};
+            const headers = data[0].map(h => String(h).toLowerCase().replace(/\s+/g, '_'));
+            const players = {};
+            data.slice(1).forEach(row => {
+                const entry = {};
+                headers.forEach((header, index) => { entry[header] = row[index] || ''; });
+                if (entry.player_tag) players[entry.player_tag] = entry;
+            });
+            return players;
+        }
+
+        function processTeams(data) {
+            if (!data || data.length < 2) return {};
+            const headers = data[0].map(h => String(h).toLowerCase().replace(/\s+/g, '_'));
+            const teams = {};
+            data.slice(1).forEach(row => {
+                const entry = {};
+                headers.forEach((header, index) => { entry[header] = row[index] || ''; });
+                if (entry.teamid) teams[entry.teamid] = entry;
+            });
+            return teams;
+        }
+
+        function processSubmissions(data) {
+            if (!data || data.length < 2) return [];
+            const headers = data[0].map(h => String(h).toLowerCase().replace(/\s+/g, '_'));
+            return data.slice(1).map((row, index) => {
+                const entry = {};
+                headers.forEach((header, col) => { entry[header] = row[col] || ''; });
+                if (!entry.fish_lenght && entry.fish_length) entry.fish_lenght = entry.fish_length;
+                entry._rowNumber = index + 2;
+                entry._validation = normalizeStatus(entry.validation || entry.status || '');
+                return entry;
+            }).filter(entry => entry.player_tag && entry.fish_type && (entry.fish_lenght || entry.fish_length));
+        }
+
+        function normalizeStatus(value) {
+            const status = String(value || '').toLowerCase().trim();
+            if (status === 'valid') return 'valid';
+            if (status === 'reject' || status === 'rejected') return 'reject';
+            if (status === 'kiv') return 'kiv';
+            return 'pending';
+        }
+
+        function escapeHtml(value) {
+            return String(value ?? '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;');
+        }
+
+        function getCounts() {
+            const counts = { all: rawRows.length, pending: 0, valid: 0, reject: 0, kiv: 0 };
+            rawRows.forEach(row => { counts[row._validation] += 1; });
+            return counts;
+        }
+
+        function renderList() {
+            const statusFilter = document.getElementById('statusFilter').value;
+            const search = document.getElementById('searchInput').value.toLowerCase().trim();
+            const counts = getCounts();
+
+            document.getElementById('statsSummary').innerHTML = `
+                <div class="stat-card ${statusFilter === 'all' ? 'active-filter' : ''}" onclick="setStatusFilter('all')">
+                    <div class="stat-value">${counts.all}</div>
+                    <div class="stat-label">All</div>
+                </div>
+                <div class="stat-card pending ${statusFilter === 'pending' ? 'active-filter' : ''}" onclick="setStatusFilter('pending')">
+                    <div class="stat-value">${counts.pending}</div>
+                    <div class="stat-label">Pending</div>
+                </div>
+                <div class="stat-card kiv ${statusFilter === 'kiv' ? 'active-filter' : ''}" onclick="setStatusFilter('kiv')">
+                    <div class="stat-value">${counts.kiv}</div>
+                    <div class="stat-label">KIV</div>
+                </div>
+                <div class="stat-card valid ${statusFilter === 'valid' ? 'active-filter' : ''}" onclick="setStatusFilter('valid')">
+                    <div class="stat-value">${counts.valid}</div>
+                    <div class="stat-label">Valid</div>
+                </div>
+                <div class="stat-card reject ${statusFilter === 'reject' ? 'active-filter' : ''}" onclick="setStatusFilter('reject')">
+                    <div class="stat-value">${counts.reject}</div>
+                    <div class="stat-label">Rejected</div>
+                </div>
+            `;
+
+            let rows = rawRows.slice();
+            if (statusFilter !== 'all') {
+                rows = rows.filter(row => row._validation === statusFilter);
+            }
+
+            if (search) {
+                rows = rows.filter(row => {
+                    const player = playersData[row.player_tag] || {};
+                    const teamId = player.team_id || player.teamid || '';
+                    const team = teamsData[teamId] || {};
+                    const haystack = [
+                        row.player_tag,
+                        row.fish_type,
+                        row.fish_lenght,
+                        row.timestamp,
+                        player.player_name,
+                        team.team_name,
+                        team.category
+                    ].join(' ').toLowerCase();
+                    return haystack.includes(search);
+                });
+            }
+
+            rows.sort((a, b) => {
+                const ta = Date.parse(a.timestamp) || 0;
+                const tb = Date.parse(b.timestamp) || 0;
+                return tb - ta;
+            });
+
+            const list = document.getElementById('submissionList');
+            if (!rows.length) {
+                list.innerHTML = `<div class="empty-state">No submissions match this filter.</div>`;
+                return;
+            }
+
+            list.innerHTML = rows.map(row => {
+                const player = playersData[row.player_tag] || {};
+                const teamId = player.team_id || player.teamid || '';
+                const team = teamsData[teamId] || {};
+                const playerName = player.player_name || `Player ${row.player_tag}`;
+                const teamName = team.team_name || team.teamid || 'Unknown team';
+                const category = team.category || team.category_name || '—';
+                const length = parseFloat(row.fish_lenght || row.fish_length) || 0;
+                const statusLabel = row._validation === 'reject' ? 'Rejected' : row._validation;
+                const picture = row.picture_of_fish_length || row.picture_of_fishs_length || row['picture_of_fish\'s_length'] || '';
+                const withFish = row.picture_with_fish || '';
+                const video = row.release_video || '';
+
+                return `
+                    <div class="card" data-row="${row._rowNumber}">
+                        <div>
+                            <div class="player-name">${escapeHtml(playerName)}</div>
+                            <div class="meta">#${escapeHtml(row.player_tag)} · ${escapeHtml(teamName)} · ${escapeHtml(category)}</div>
+                            <span class="badge ${row._validation}">${escapeHtml(statusLabel)}</span>
+                            <div class="details">
+                                <div class="detail">
+                                    <div class="detail-label">Fish type</div>
+                                    <div class="detail-value">${escapeHtml(row.fish_type || '—')}</div>
+                                </div>
+                                <div class="detail">
+                                    <div class="detail-label">Length</div>
+                                    <div class="detail-value length">${length.toFixed(1)} cm</div>
+                                </div>
+                                <div class="detail">
+                                    <div class="detail-label">Submitted</div>
+                                    <div class="detail-value">${escapeHtml(row.timestamp || '—')}</div>
+                                </div>
+                                <div class="detail">
+                                    <div class="detail-label">Sheet row</div>
+                                    <div class="detail-value">${row._rowNumber}</div>
+                                </div>
+                            </div>
+                            <div class="media-links">
+                                ${picture ? `<a href="${escapeHtml(picture)}" target="_blank" rel="noopener">Length photo</a>` : ''}
+                                ${withFish ? `<a href="${escapeHtml(withFish)}" target="_blank" rel="noopener">Fish photo</a>` : ''}
+                                ${video ? `<a href="${escapeHtml(video)}" target="_blank" rel="noopener">Release video</a>` : ''}
+                            </div>
+                        </div>
+                        <div class="actions">
+                            <button class="action-btn valid" onclick="setValidation(${row._rowNumber}, 'valid')">Valid</button>
+                            <button class="action-btn kiv" onclick="setValidation(${row._rowNumber}, 'kiv')">KIV</button>
+                            <button class="action-btn reject" onclick="setValidation(${row._rowNumber}, 'reject')">Reject</button>
+                            <button class="action-btn clear" onclick="setValidation(${row._rowNumber}, '')">Clear</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function setStatusFilter(value) {
+            document.getElementById('statusFilter').value = value;
+            renderList();
+        }
+
+        function showMessage(text, type) {
+            const box = document.getElementById('message');
+            box.style.display = 'block';
+            box.className = type === 'error' ? 'error' : 'success';
+            box.textContent = text;
+            clearTimeout(showMessage._timer);
+            showMessage._timer = setTimeout(() => {
+                box.style.display = 'none';
+            }, 3500);
+        }
+
+        async function setValidation(rowNumber, status) {
+            const entry = rawRows.find(row => row._rowNumber === rowNumber);
+            if (!entry) return;
+
+            const sheetName = getConfig('submissionSheet') || 'submission';
+            const buttons = document.querySelectorAll(`.card[data-row="${rowNumber}"] .action-btn`);
+            buttons.forEach(btn => { btn.disabled = true; });
+
+            try {
+                const params = new URLSearchParams({
+                    action: 'setValidation',
+                    row: String(rowNumber),
+                    status: status,
+                    sheet: sheetName
+                });
+                const response = await fetch(`validation-proxy.php?${params.toString()}`);
+                const result = await response.json().catch(() => ({}));
+
+                if (!response.ok || !result.ok) {
+                    throw new Error(result.error || `Update failed (${response.status})`);
+                }
+
+                entry.validation = status;
+                entry._validation = normalizeStatus(status);
+                showMessage(`Row ${rowNumber} marked as ${status ? status : 'pending'}.`, 'success');
+                renderList();
+            } catch (error) {
+                console.error(error);
+                showMessage(error.message, 'error');
+                buttons.forEach(btn => { btn.disabled = false; });
+            }
+        }
+    </script>
+</body>
+</html>

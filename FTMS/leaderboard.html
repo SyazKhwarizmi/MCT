@@ -595,6 +595,7 @@
                 <a href="leaderboard.html" class="nav-btn active">🐟 Submissions</a>
                 <a href="leaderboard-individual.html" class="nav-btn">👤 Individual</a>
                 <a href="leaderboard-team.html" class="nav-btn">🏅 Team</a>
+                <!-- <a href="validation.html" class="nav-btn">✅ Validation</a> -->
             </div>
         </div>
 
@@ -815,7 +816,20 @@
                     console.log('Found image URL for player', entry.player_tag, ':', entry.fish_lenght_picture);
                 }
                 return entry;
-            }).filter(entry => entry.player_tag && entry.fish_type && (entry.fish_lenght || entry.fish_length));
+            }).filter(entry =>
+                entry.player_tag &&
+                entry.fish_type &&
+                (entry.fish_lenght || entry.fish_length) &&
+                isValidSubmission(entry)
+            );
+        }
+
+        function isValidSubmission(entry) {
+            const status = (entry.validation || entry.status || '')
+                .toString()
+                .toLowerCase()
+                .trim();
+            return status === 'valid';
         }
 
         function processPlayers(data) {
